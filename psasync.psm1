@@ -173,12 +173,9 @@ Function Receive-AsyncStatus
 {
 <#
 .SYNOPSIS 
-Receives the results of one or more asynchronous pipelines.
+Receives the status of one or more asynchronous pipelines.
 
 .DESCRIPTION
-This function receives the results of a pipeline running in a separate runspace.  
-Since it is unknown what exists in the results stream of the pipeline, this function
-will not have a standard return type.  
 
 .PARAMETER AsyncResults
 An array of AsyncPipleine objects, typically returned by Invoke-Async.
