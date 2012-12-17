@@ -177,7 +177,7 @@ Receives the status of one or more asynchronous pipelines.
 
 .DESCRIPTION
 
-.PARAMETER AsyncResults
+.PARAMETER Pipelines
 An array of AsyncPipleine objects, typically returned by Invoke-Async.
   
 .NOTES
