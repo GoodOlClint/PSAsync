@@ -47,8 +47,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RemoveAsync.cs" />
+    <Compile Include="SuspendAsync.cs" />
+    <Compile Include="ResumeAsync.cs" />
+    <Compile Include="ReceiveAsync.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PSRunspace.cs" />
+    <Compile Include="GetAsync.cs" />
+    <Compile Include="WaitAsync.cs" />
+    <Compile Include="StartAsync.cs" />
+    <Compile Include="StopAsync.cs" />
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
