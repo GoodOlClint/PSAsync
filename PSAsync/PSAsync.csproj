@@ -47,6 +47,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsyncJob.cs" />
     <Compile Include="RemoveAsync.cs" />
     <Compile Include="SuspendAsync.cs" />
     <Compile Include="ResumeAsync.cs" />
