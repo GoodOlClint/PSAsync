@@ -21,13 +21,24 @@ namespace PSAsync
 
         protected override void ProcessRecord()
         {
-            AsyncJob[] jobs;
+            IEnumerable<AsyncJob> jobs;
             if (this.ParameterSetName == "ID")
-            { jobs = PSRunspace.Instance.JobQueue.Where(j => this.Id.Contains(j.Id)).ToArray(); }
+            {
+                jobs = from j in PSRunspace.Instance.JobQueue
+                       where this.Id.Contains(j.Value.Id)
+                       select j.Value;
+            }
             else if (this.ParameterSetName == "Name")
-            { jobs = PSRunspace.Instance.JobQueue.Where(j => this.Name.Contains(j.Name)).ToArray(); }
+            {
+                jobs = from j in PSRunspace.Instance.JobQueue
+                       where this.Name.Contains(j.Value.Name)
+                       select j.Value;
+            }
             else
-            { jobs = PSRunspace.Instance.JobQueue.ToArray(); }
+            {
+                jobs = from j in PSRunspace.Instance.JobQueue
+                       select j.Value;
+            }
 
             foreach (AsyncJob j in jobs)
             { WriteObject(j.GetJob()); }
