@@ -87,7 +87,7 @@ namespace PSAsync
             return pipeline;
         }
 
-        private ConcurrentBag<AsyncJob> JobQueue;
+        internal ConcurrentBag<AsyncJob> JobQueue;
         public void AddJob(AsyncJob Job)
         { this.JobQueue.Add(Job); }
 
