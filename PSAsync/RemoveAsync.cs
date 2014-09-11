@@ -7,7 +7,7 @@ using System.Management.Automation;
 namespace PSAsync
 {
     [Cmdlet(VerbsCommon.Remove, "Async")]
-    [CmdletBinding(DefaultParameterSetName = "Default")]
+    [CmdletBinding(DefaultParameterSetName = "Job")]
     public class RemoveAsync : PSCmdlet
     {
         [Parameter(ParameterSetName = "ID", Mandatory = true)]
@@ -16,7 +16,7 @@ namespace PSAsync
         [Parameter(ParameterSetName = "Name", Mandatory = true)]
         public string[] Name { get; set; }
 
-        [Parameter(ParameterSetName = "Default", ValueFromPipeline = true)]
+        [Parameter(ParameterSetName = "Job", ValueFromPipeline = true)]
         public AsyncJob[] Job { get; set; }
 
         protected override void ProcessRecord()
