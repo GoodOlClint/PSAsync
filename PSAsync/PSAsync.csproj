@@ -49,8 +49,6 @@
   <ItemGroup>
     <Compile Include="AsyncJob.cs" />
     <Compile Include="RemoveAsync.cs" />
-    <Compile Include="SuspendAsync.cs" />
-    <Compile Include="ResumeAsync.cs" />
     <Compile Include="ReceiveAsync.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PSRunspace.cs" />
