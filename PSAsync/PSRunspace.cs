@@ -35,6 +35,8 @@ namespace PSAsync
 
         public bool IsOpen { get; private set; }
         public int PoolSize { get; set; }
+        public AuthenticationMechanism Authentication { get; set; }
+        public PSCredential Credential { get; set; }
 
         public void Open()
         {
@@ -42,7 +44,11 @@ namespace PSAsync
             {
                 this.IsOpen = true;
                 if (null != this.pool)
-                { this.pool = RunspaceFactory.CreateRunspacePool(1, this.PoolSize); }
+                {
+                    this.pool = RunspaceFactory.CreateRunspacePool(1, this.PoolSize);
+                    this.pool.ConnectionInfo.AuthenticationMechanism = this.Authentication;
+                    this.pool.ConnectionInfo.Credential = this.Credential;
+                }
                 this.pool.Open();
             }
         }
