@@ -11,12 +11,14 @@ namespace PSAsync
     public class WaitAsync : PSCmdlet
     {
         [Parameter(ValueFromPipeline = true)]
-        public AsyncJob Job { get; set; }
+        public AsyncJob[] Job { get; set; }
 
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
-            Job.Finished.WaitOne();
+            var waitHandles = from j in this.Job
+                              select j.Finished;
+            WaitHandle.WaitAll(waitHandles.ToArray());
         }
     }
 }
