@@ -4,6 +4,7 @@ using System.Management.Automation;
 using System.Management.Automation.Runspaces;
 using System.Threading;
 using System.Linq;
+using System;
 
 namespace PSAsync
 {
@@ -35,7 +36,7 @@ namespace PSAsync
         {
             this.PoolSize = 20;
             this.IsOpen = false;
-            this.JobQueue = new ConcurrentBag<AsyncJob>();
+            this.JobQueue = new ConcurrentDictionary<Guid, AsyncJob>();
         }
 
         private RunspacePool pool;
@@ -61,7 +62,7 @@ namespace PSAsync
 
         private void StartJobs()
         {
-            var NewJobs = this.JobQueue.Where(j => j.Started == false);
+            var NewJobs = this.JobQueue.Where(j => j.Value.Started == false).Select(j => j.Value);
             if (NewJobs.Count() > 0)
             {
                 this.WorkLimit.WaitOne();
@@ -87,9 +88,9 @@ namespace PSAsync
             return pipeline;
         }
 
-        internal ConcurrentBag<AsyncJob> JobQueue;
+        internal ConcurrentDictionary<Guid, AsyncJob> JobQueue;
         public void AddJob(AsyncJob Job)
-        { this.JobQueue.Add(Job); }
+        { this.JobQueue.TryAdd(Job.InstanceId, Job); }
 
         public void Close()
         {
