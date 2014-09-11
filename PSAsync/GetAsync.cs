@@ -7,7 +7,7 @@ using System.Management.Automation;
 namespace PSAsync
 {
     [Cmdlet(VerbsCommon.Get, "Async")]
-    [CmdletBinding(DefaultParameterSetName = "Default")]
+    [CmdletBinding(DefaultParameterSetName = "Job")]
     public class GetAsync : PSCmdlet
     {
         [Parameter(ParameterSetName = "ID", Mandatory = true)]
@@ -19,21 +19,21 @@ namespace PSAsync
         [Parameter(ParameterSetName = "State", Mandatory = true)]
         public JobState State { get; set; }
 
-        [Parameter(ParameterSetName = "Default", ValueFromPipeline = true)]
-        public List<AsyncJob> InputObject { get; set; }
+        [Parameter(ParameterSetName = "Job", ValueFromPipeline = true)]
+        public AsyncJob[] Job { get; set; }
 
         protected override void ProcessRecord()
         {
-            AsyncJob[] jobs;
+            IEnumerable<KeyValuePair<Guid, AsyncJob>> jobs;
             if (this.ParameterSetName == "ID")
-            { jobs = PSRunspace.Instance.JobQueue.Where(j => this.Id.Contains(j.Id)).ToArray(); }
+            { jobs = PSRunspace.Instance.JobQueue.Where(j => this.Id.Contains(j.Value.Id)); }
             else if (this.ParameterSetName == "Name")
-            { jobs = PSRunspace.Instance.JobQueue.Where(j => this.Name.Contains(j.Name)).ToArray(); }
+            { jobs = PSRunspace.Instance.JobQueue.Where(j => this.Name.Contains(j.Value.Name)); }
             else if (this.ParameterSetName == "State")
-            { jobs = PSRunspace.Instance.JobQueue.Where(j => j.JobStateInfo.State == this.State).ToArray(); }
+            { jobs = PSRunspace.Instance.JobQueue.Where(j => j.Value.JobStateInfo.State == this.State); }
             else
-            { jobs = PSRunspace.Instance.JobQueue.ToArray(); }
-            WriteObject(jobs);
+            { jobs = PSRunspace.Instance.JobQueue; }
+            WriteObject(jobs.Select(j => j.Value));
         }
     }
 }
