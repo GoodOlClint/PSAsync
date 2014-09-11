@@ -7,7 +7,7 @@ using System.Management.Automation;
 namespace PSAsync
 {
     [Cmdlet(VerbsLifecycle.Stop, "Async")]
-    [CmdletBinding(DefaultParameterSetName = "Default")]
+    [CmdletBinding(DefaultParameterSetName = "Job")]
     public class StopAsync : PSCmdlet
     {
         [Parameter(ParameterSetName = "ID", Mandatory = true)]
@@ -16,22 +16,37 @@ namespace PSAsync
         [Parameter(ParameterSetName = "Name", Mandatory = true)]
         public string[] Name { get; set; }
 
-        [Parameter(ParameterSetName = "Default", ValueFromPipeline = true)]
-        public AsyncJob[] InputObject { get; set; }
+        [Parameter(ParameterSetName = "Job", ValueFromPipeline = true)]
+        public AsyncJob[] Job { get; set; }
 
         protected override void ProcessRecord()
         {
-            AsyncJob[] jobs;
-            if (this.ParameterSetName == "ID")
-            { jobs = PSRunspace.Instance.JobQueue.Where(j => this.Id.Contains(j.Id)).ToArray(); }
-            else if (this.ParameterSetName == "Name")
-            { jobs = PSRunspace.Instance.JobQueue.Where(j => this.Name.Contains(j.Name)).ToArray(); }
-            else if (this.InputObject != null)
-            { jobs = this.InputObject; }
-            else
-            { jobs = PSRunspace.Instance.JobQueue.ToArray(); }
 
-            foreach (AsyncJob j in jobs)
+            IEnumerable<AsyncJob> jobs;
+            if (this.ParameterSetName == "ID")
+            {
+                jobs = from j in PSRunspace.Instance.JobQueue
+                       where this.Id.Contains(j.Value.Id)
+                       select j.Value;
+            }
+            else if (this.ParameterSetName == "Name")
+            {
+                jobs = from j in PSRunspace.Instance.JobQueue
+                       where this.Name.Contains(j.Value.Name)
+                       select j.Value;
+            }
+            else if (this.Job != null)
+            {
+                jobs = from j in this.Job
+                       select j;
+            }
+            else
+            {
+                jobs = from j in PSRunspace.Instance.JobQueue
+                       select j.Value;
+            }
+
+            foreach (var j in jobs)
             { j.StopJob(); }
         }
     }
