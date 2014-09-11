@@ -16,7 +16,7 @@ namespace PSAsync
         [Parameter(ParameterSetName = "Name", Mandatory = true)]
         public string[] Name { get; set; }
 
-        [Parameter(ParameterSetName = "Default", Mandatory = true, ValueFromPipeline = true)]
+        [Parameter(ParameterSetName = "Default", ValueFromPipeline = true)]
         public List<AsyncJob> InputObject { get; set; }
 
         protected override void ProcessRecord()
