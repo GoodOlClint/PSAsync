@@ -60,6 +60,7 @@ namespace PSAsync
         private bool hasRead = false;
 
         public bool IsFinished { get { return this.AsyncResults.IsCompleted; } }
+        internal bool Started { get; set; }
 
         public override bool HasMoreData
         { get { return !this.hasRead; } }
@@ -74,14 +75,17 @@ namespace PSAsync
         { this.Pipeline.Stop(); }
 
         public void StartJob()
-        { this.AsyncResults = this.Pipeline.BeginInvoke(); }
+        {
+            this.AsyncResults = this.Pipeline.BeginInvoke();
+            this.Started = true;
+        }
 
         public PSDataCollection<PSObject> GetJob()
         {
             this.hasRead = true;
             PSDataCollection<PSObject> data;
             data = this.Pipeline.EndInvoke(this.AsyncResults);
-            foreach(var err in this.Pipeline.Streams.Error)
+            foreach (var err in this.Pipeline.Streams.Error)
             { data.Add(new PSObject(err)); }
             this.Dispose();
             return data;

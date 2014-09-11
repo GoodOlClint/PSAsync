@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
 using System.Threading;
+using System.Linq;
 
 namespace PSAsync
 {
@@ -34,7 +35,7 @@ namespace PSAsync
         {
             this.PoolSize = 20;
             this.IsOpen = false;
-            this.JobQueue = new ConcurrentQueue<AsyncJob>();
+            this.JobQueue = new ConcurrentBag<AsyncJob>();
         }
 
         private RunspacePool pool;
@@ -60,15 +61,13 @@ namespace PSAsync
 
         private void StartJobs()
         {
-            if (this.JobQueue.Count > 0)
+            var NewJobs = this.JobQueue.Where(j => j.Started == false);
+            if (NewJobs.Count() > 0)
             {
                 this.WorkLimit.WaitOne();
-                AsyncJob data;
-                if (this.JobQueue.TryDequeue(out data))
-                {
-                    data.StartJob();
-                    data.StateChanged += data_StateChanged;
-                }
+                AsyncJob data = NewJobs.First();
+                data.StartJob();
+                data.StateChanged += data_StateChanged;
             }
             Thread.Sleep(250);
             this.StartJobs();
@@ -88,9 +87,9 @@ namespace PSAsync
             return pipeline;
         }
 
-        private ConcurrentQueue<AsyncJob> JobQueue;
+        private ConcurrentBag<AsyncJob> JobQueue;
         public void AddJob(AsyncJob Job)
-        { this.JobQueue.Enqueue(Job); }
+        { this.JobQueue.Add(Job); }
 
         public void Close()
         {
