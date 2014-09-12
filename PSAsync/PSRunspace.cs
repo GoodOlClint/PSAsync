@@ -62,16 +62,18 @@ namespace PSAsync
 
         private void StartJobs()
         {
-            var NewJobs = this.JobQueue.Where(j => j.Value.Started == false).Select(j => j.Value);
-            if (NewJobs.Count() > 0)
+            while (this.IsOpen)
             {
-                this.WorkLimit.WaitOne();
-                AsyncJob data = NewJobs.First();
-                data.StartJob();
-                data.StateChanged += data_StateChanged;
+                var NewJobs = this.JobQueue.Where(j => j.Value.Started == false).Select(j => j.Value);
+                if (NewJobs.Count() > 0)
+                {
+                    this.WorkLimit.WaitOne();
+                    AsyncJob data = NewJobs.First();
+                    data.StartJob();
+                    data.StateChanged += data_StateChanged;
+                }
+                Thread.Sleep(250);
             }
-            Thread.Sleep(250);
-            this.StartJobs();
         }
 
         void data_StateChanged(object sender, JobStateEventArgs e)
