@@ -7,16 +7,16 @@ using System.Management.Automation;
 namespace PSAsync
 {
     [Cmdlet(VerbsCommon.Get, "Async")]
-    [CmdletBinding(DefaultParameterSetName = "Job")]
+    [CmdletBinding(DefaultParameterSetName = "SessionIdParameterSet")]
     public class GetAsync : PSCmdlet
     {
-        [Parameter(ParameterSetName = "ID", Mandatory = true)]
+        [Parameter(ParameterSetName = "SessionIdParameterSet", Position = 1)]
         public int[] Id { get; set; }
 
-        [Parameter(ParameterSetName = "Name", Mandatory = true)]
+        [Parameter(ParameterSetName = "NameParameterSet", Mandatory = true)]
         public string[] Name { get; set; }
 
-        [Parameter(ParameterSetName = "State", Mandatory = true)]
+        [Parameter(ParameterSetName = "StateParameterSet", Mandatory = true)]
         public JobState State { get; set; }
 
         [Parameter(ParameterSetName = "Job", ValueFromPipeline = true)]
@@ -43,7 +43,7 @@ namespace PSAsync
                               select j.Value);
             }
 
-            if (this.State != null)
+            if (this.ParameterSetName == "StateParameterSet")
             {
                 jobs.AddRange(from j in PSRunspace.Instance.JobQueue
                               where j.Value.JobStateInfo.State == this.State
