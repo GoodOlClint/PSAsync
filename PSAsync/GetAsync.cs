@@ -28,35 +28,39 @@ namespace PSAsync
         protected override void ProcessRecord()
         {
 
-            IEnumerable<AsyncJob> jobs;
-            if (this.ParameterSetName == "ID")
+            List<AsyncJob> jobs = new List<AsyncJob>();
+            if (this.Id != null)
             {
-                jobs = from j in PSRunspace.Instance.JobQueue
-                       where this.Id.Contains(j.Value.Id)
-                       select j.Value;
+                jobs.AddRange(from j in PSRunspace.Instance.JobQueue
+                              where this.Id.Contains(j.Value.Id)
+                              select j.Value);
             }
-            else if (this.ParameterSetName == "Name")
+
+            if (this.Name != null)
             {
-                jobs = from j in PSRunspace.Instance.JobQueue
-                       where this.Name.Contains(j.Value.Name)
-                       select j.Value;
+                jobs.AddRange(from j in PSRunspace.Instance.JobQueue
+                              where this.Name.Contains(j.Value.Name)
+                              select j.Value);
             }
-            else if (this.ParameterSetName == "State")
+
+            if (this.State != null)
             {
-                jobs = from j in PSRunspace.Instance.JobQueue
-                       where j.Value.JobStateInfo.State == this.State
-                       select j.Value;
+                jobs.AddRange(from j in PSRunspace.Instance.JobQueue
+                              where j.Value.JobStateInfo.State == this.State
+                              select j.Value);
             }
-            else if (this.After != null)
+
+            if (this.After != null)
             {
-                jobs = from j in PSRunspace.Instance.JobQueue
-                       where j.Value.PSEndTime >= this.After
-                       select j.Value;
+                jobs.AddRange(from j in PSRunspace.Instance.JobQueue
+                              where j.Value.PSEndTime >= this.After
+                              select j.Value);
             }
-            else
+
+            if (jobs.Count == 0)
             {
-                jobs = from j in PSRunspace.Instance.JobQueue
-                       select j.Value;
+                jobs.AddRange(from j in PSRunspace.Instance.JobQueue
+                              select j.Value);
             }
 
             WriteObject(jobs.ToArray());
