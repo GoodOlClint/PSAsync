@@ -13,12 +13,17 @@ namespace PSAsync
         [Parameter(ValueFromPipeline = true)]
         public AsyncJob[] Job { get; set; }
 
+        protected override void BeginProcessing()
+        { waitHandles = new List<WaitHandle>(); }
+
+        List<WaitHandle> waitHandles;
         protected override void ProcessRecord()
+        { waitHandles.Add(this.Job.Select(j => j.Finished).First()); }
+
+        protected override void EndProcessing()
         {
-            base.ProcessRecord();
-            var waitHandles = from j in this.Job
-                              select j.Finished;
-            WaitHandle.WaitAll(waitHandles.ToArray());
+            foreach (var handle in this.waitHandles)
+            { handle.WaitOne(); }
         }
     }
 }
