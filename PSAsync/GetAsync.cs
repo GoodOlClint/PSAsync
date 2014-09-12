@@ -19,9 +19,6 @@ namespace PSAsync
         [Parameter(ParameterSetName = "StateParameterSet", Mandatory = true)]
         public JobState State { get; set; }
 
-        [Parameter(ParameterSetName = "Job", ValueFromPipeline = true)]
-        public AsyncJob[] Job { get; set; }
-
         [Parameter()]
         public DateTime After { get; set; }
 
