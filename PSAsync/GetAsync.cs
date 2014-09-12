@@ -59,7 +59,7 @@ namespace PSAsync
                        select j.Value;
             }
 
-            WriteObject(jobs);
+            WriteObject(jobs.ToArray());
         }
     }
 }
