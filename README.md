@@ -3,43 +3,45 @@ PSAsync
 Forked from https://psasync.codeplex.com
 
 Example speed difference:
+
 ```Powershell
-PS C:\> Measure-Command {Start-Async {Test-Connection localhost -Count 15} | Wait-Async}
+PS C:\> Measure-Command {1..15 | %{Start-Async {Start-Sleep -Seconds 1}} | Wait-Async}
 Days              : 0
 Hours             : 0
 Minutes           : 0
-Seconds           : 14
-Milliseconds      : 377
-Ticks             : 143773635
-TotalDays         : 0.000166404670138889
-TotalHours        : 0.00399371208333333
-TotalMinutes      : 0.239622725
-TotalSeconds      : 14.3773635
-TotalMilliseconds : 14377.3635
+Seconds           : 5
+Milliseconds      : 279
+Ticks             : 52791771
+TotalDays         : 6.11015868055556E-05
+TotalHours        : 0.00146643808333333
+TotalMinutes      : 0.087986285
+TotalSeconds      : 5.2791771
+TotalMilliseconds : 5279.1771
 
-PS C:\> Measure-Command {Start-Job {Test-Connection localhost -Count 15} | Wait-Job}
+PS C:\> Measure-Command {1..15 | %{Start-Job {Start-Sleep -Seconds 1}} | Wait-Job}
 Days              : 0
 Hours             : 0
 Minutes           : 0
-Seconds           : 19
-Milliseconds      : 499
-Ticks             : 194994021
-TotalDays         : 0.000225687524305556
-TotalHours        : 0.00541650058333333
-TotalMinutes      : 0.324990035
-TotalSeconds      : 19.4994021
-TotalMilliseconds : 19499.4021
+Seconds           : 30
+Milliseconds      : 615
+Ticks             : 306150242
+TotalDays         : 0.00035434055787037
+TotalHours        : 0.00850417338888889
+TotalMinutes      : 0.510250403333333
+TotalSeconds      : 30.6150242
+TotalMilliseconds : 30615.0242
 
-PS C:\> Measure-Command {Test-Connection localhost Count 15}
+PS C:\> Measure-Command {1..15 | %{Start-Sleep -Seconds 1}}
 Days              : 0
 Hours             : 0
 Minutes           : 0
-Seconds           : 14
-Milliseconds      : 99
-Ticks             : 140995935
-TotalDays         : 0.000163189739583333
-TotalHours        : 0.00391655375
-TotalMinutes      : 0.234993225
-TotalSeconds      : 14.0995935
-TotalMilliseconds : 14099.5935
+Seconds           : 15
+Milliseconds      : 202
+Ticks             : 152028544
+TotalDays         : 0.000175958962962963
+TotalHours        : 0.00422301511111111
+TotalMinutes      : 0.253380906666667
+TotalSeconds      : 15.2028544
+TotalMilliseconds : 15202.8544
+
 ```
