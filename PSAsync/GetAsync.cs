@@ -63,7 +63,8 @@ namespace PSAsync
                               select j.Value);
             }
 
-            WriteObject(jobs.ToArray());
+            foreach (var job in jobs)
+            { WriteObject(job); }
         }
     }
 }
