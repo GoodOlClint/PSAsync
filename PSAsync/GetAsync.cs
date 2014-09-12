@@ -22,6 +22,9 @@ namespace PSAsync
         [Parameter(ParameterSetName = "Job", ValueFromPipeline = true)]
         public AsyncJob[] Job { get; set; }
 
+        [Parameter()]
+        public DateTime After { get; set; }
+
         protected override void ProcessRecord()
         {
 
@@ -42,6 +45,12 @@ namespace PSAsync
             {
                 jobs = from j in PSRunspace.Instance.JobQueue
                        where j.Value.JobStateInfo.State == this.State
+                       select j.Value;
+            }
+            else if (this.After != null)
+            {
+                jobs = from j in PSRunspace.Instance.JobQueue
+                       where j.Value.PSEndTime >= this.After
                        select j.Value;
             }
             else
