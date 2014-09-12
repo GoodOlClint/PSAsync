@@ -19,8 +19,10 @@ namespace PSAsync
         [Parameter(ParameterSetName = "StateParameterSet", Mandatory = true)]
         public JobState State { get; set; }
 
-        [Parameter()]
-        public DateTime After { get; set; }
+        [Parameter(ParameterSetName = "SessionIdParameterSet")]
+        [Parameter(ParameterSetName = "NameParameterSet")]
+        [Parameter(ParameterSetName = "StateParameterSet")]
+        public DateTime? After { get; set; }
 
         protected override void ProcessRecord()
         {
@@ -33,7 +35,7 @@ namespace PSAsync
                               select j.Value);
             }
 
-            if (this.Name != null)
+            if (this.ParameterSetName == "NameParameterSet")
             {
                 jobs.AddRange(from j in PSRunspace.Instance.JobQueue
                               where this.Name.Contains(j.Value.Name)
