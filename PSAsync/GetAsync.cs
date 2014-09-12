@@ -24,6 +24,11 @@ namespace PSAsync
         [Parameter(ParameterSetName = "StateParameterSet")]
         public DateTime? After { get; set; }
 
+        [Parameter(ParameterSetName = "SessionIdParameterSet")]
+        [Parameter(ParameterSetName = "NameParameterSet")]
+        [Parameter(ParameterSetName = "StateParameterSet")]
+        public DateTime? Before { get; set; }
+
         protected override void ProcessRecord()
         {
 
@@ -49,7 +54,20 @@ namespace PSAsync
                               select j.Value);
             }
 
-            if (this.After != null)
+            if((this.After != null ) && (this.Before != null))
+            {
+                jobs.AddRange(from j in PSRunspace.Instance.JobQueue
+                              where j.Value.PSEndTime >= this.After
+                              where j.Value.PSEndTime <= this.Before
+                              select j.Value);
+            }
+            else if (this.After != null)
+            {
+                jobs.AddRange(from j in PSRunspace.Instance.JobQueue
+                              where j.Value.PSEndTime >= this.After
+                              select j.Value);
+            }
+            else if (this.Before != null)
             {
                 jobs.AddRange(from j in PSRunspace.Instance.JobQueue
                               where j.Value.PSEndTime >= this.After
