@@ -19,15 +19,20 @@ namespace PSAsync
         [Parameter(ParameterSetName = "NameParameterSet", Mandatory = true)]
         public string[] Name { get; set; }
 
+        [Parameter(ParameterSetName = "CommandParameterSet", Mandatory = true)]
+        public string[] Command { get; set; }
+
         [Parameter(ParameterSetName = "StateParameterSet", Mandatory = true)]
         public JobState State { get; set; }
 
+        [Parameter(ParameterSetName = "CommandParameterSet")]
         [Parameter(ParameterSetName = "InstanceIdParameterSet")]
         [Parameter(ParameterSetName = "SessionIdParameterSet")]
         [Parameter(ParameterSetName = "NameParameterSet")]
         [Parameter(ParameterSetName = "StateParameterSet")]
         public DateTime? After { get; set; }
 
+        [Parameter(ParameterSetName = "CommandParameterSet")]
         [Parameter(ParameterSetName = "InstanceIdParameterSet")]
         [Parameter(ParameterSetName = "SessionIdParameterSet")]
         [Parameter(ParameterSetName = "NameParameterSet")]
@@ -63,6 +68,13 @@ namespace PSAsync
             {
                 jobs.AddRange(from j in PSRunspace.Instance.JobQueue
                               where this.InstanceID.Contains(j.Value.InstanceId)
+                              select j.Value);
+            }
+
+            if (this.ParameterSetName == "CommandParameterSet")
+            {
+                jobs.AddRange(from j in PSRunspace.Instance.JobQueue
+                              where this.Command.Contains(j.Value.Command)
                               select j.Value);
             }
 
