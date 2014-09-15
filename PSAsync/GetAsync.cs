@@ -13,7 +13,7 @@ namespace PSAsync
         [Parameter(ParameterSetName = "SessionIdParameterSet", Position = 1)]
         public int[] Id { get; set; }
 
-        [Parameter(ParameterSetName = "InstanceIdParameterSet", Position = 1)]
+        [Parameter(ParameterSetName = "InstanceIdParameterSet", Mandatory = true)]
         public Guid[] InstanceID { get; set; }
 
         [Parameter(ParameterSetName = "NameParameterSet", Mandatory = true)]
