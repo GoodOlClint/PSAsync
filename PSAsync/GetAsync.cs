@@ -66,31 +66,35 @@ namespace PSAsync
                               select j.Value);
             }
 
-            if ((this.After != null) && (this.Before != null))
-            {
-                jobs.AddRange(from j in PSRunspace.Instance.JobQueue
-                              where j.Value.PSEndTime >= this.After
-                              where j.Value.PSEndTime <= this.Before
-                              select j.Value);
-            }
-            else if (this.After != null)
-            {
-                jobs.AddRange(from j in PSRunspace.Instance.JobQueue
-                              where j.Value.PSEndTime >= this.After
-                              select j.Value);
-            }
-            else if (this.Before != null)
-            {
-                jobs.AddRange(from j in PSRunspace.Instance.JobQueue
-                              where j.Value.PSEndTime >= this.After
-                              select j.Value);
-            }
-
             if (jobs.Count == 0)
             {
                 jobs.AddRange(from j in PSRunspace.Instance.JobQueue
                               select j.Value);
             }
+
+            if ((this.After != null) && (this.Before != null))
+            {
+                var tempJobs = from j in jobs
+                               where j.PSEndTime >= this.After
+                               where j.PSEndTime <= this.Before
+                               select j;
+                jobs = tempJobs.ToList();
+            }
+            else if (this.After != null)
+            {
+                var tempJobs = from j in jobs
+                               where j.PSEndTime >= this.After
+                               select j;
+                jobs = tempJobs.ToList();
+            }
+            else if (this.Before != null)
+            {
+                var tempJobs = from j in jobs
+                               where j.PSEndTime >= this.After
+                               select j;
+                jobs = tempJobs.ToList();
+            }
+
 
             foreach (var job in jobs)
             { WriteObject(job); }
