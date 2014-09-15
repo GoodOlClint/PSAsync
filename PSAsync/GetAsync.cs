@@ -13,17 +13,22 @@ namespace PSAsync
         [Parameter(ParameterSetName = "SessionIdParameterSet", Position = 1)]
         public int[] Id { get; set; }
 
+        [Parameter(ParameterSetName = "InstanceIdParameterSet", Position = 1)]
+        public Guid[] InstanceID { get; set; }
+
         [Parameter(ParameterSetName = "NameParameterSet", Mandatory = true)]
         public string[] Name { get; set; }
 
         [Parameter(ParameterSetName = "StateParameterSet", Mandatory = true)]
         public JobState State { get; set; }
 
+        [Parameter(ParameterSetName = "InstanceIdParameterSet")]
         [Parameter(ParameterSetName = "SessionIdParameterSet")]
         [Parameter(ParameterSetName = "NameParameterSet")]
         [Parameter(ParameterSetName = "StateParameterSet")]
         public DateTime? After { get; set; }
 
+        [Parameter(ParameterSetName = "InstanceIdParameterSet")]
         [Parameter(ParameterSetName = "SessionIdParameterSet")]
         [Parameter(ParameterSetName = "NameParameterSet")]
         [Parameter(ParameterSetName = "StateParameterSet")]
@@ -54,7 +59,14 @@ namespace PSAsync
                               select j.Value);
             }
 
-            if((this.After != null ) && (this.Before != null))
+            if (this.ParameterSetName == "InstanceIdParameterSet")
+            {
+                jobs.AddRange(from j in PSRunspace.Instance.JobQueue
+                              where this.InstanceID.Contains(j.Value.InstanceId)
+                              select j.Value);
+            }
+
+            if ((this.After != null) && (this.Before != null))
             {
                 jobs.AddRange(from j in PSRunspace.Instance.JobQueue
                               where j.Value.PSEndTime >= this.After
