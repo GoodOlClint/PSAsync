@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Management.Automation;
+using System.Collections;
 
 namespace PSAsync
 {
@@ -52,6 +53,13 @@ namespace PSAsync
         [Parameter(ParameterSetName = "NameParameterSet")]
         [Parameter(ParameterSetName = "StateParameterSet")]
         public int Newest { get; set; }
+
+        [Parameter(ParameterSetName = "CommandParameterSet")]
+        [Parameter(ParameterSetName = "InstanceIdParameterSet")]
+        [Parameter(ParameterSetName = "SessionIdParameterSet")]
+        [Parameter(ParameterSetName = "NameParameterSet")]
+        [Parameter(ParameterSetName = "StateParameterSet")]
+        public Hashtable Filter { get; set; }
 
         protected override void ProcessRecord()
         {
@@ -135,6 +143,23 @@ namespace PSAsync
                                orderby j.PSEndTime
                                select j;
                 jobs = tempJobs.Take(this.Newest).ToList();
+            }
+
+            if (this.Filter != null)
+            {
+                var props = typeof(AsyncJob).GetProperties();
+                var tempJobs = jobs.ConvertAll(j => j);
+                jobs.Clear();
+                foreach (DictionaryEntry pair in this.Filter)
+                {
+                    var myProp = (from prop in props
+                                  where prop.Name == pair.Key.ToString()
+                                  select prop).First();
+                    jobs.AddRange(from j in tempJobs
+                                  where myProp.GetValue(j, null) == pair.Value
+                                  select j);
+
+                }
             }
 
             foreach (var job in jobs.OrderBy(j => j.Id))
