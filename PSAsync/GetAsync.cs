@@ -46,6 +46,13 @@ namespace PSAsync
         [Parameter(ParameterSetName = "StateParameterSet")]
         public SwitchParameter HasMoreData { get; set; }
 
+        [Parameter(ParameterSetName = "CommandParameterSet")]
+        [Parameter(ParameterSetName = "InstanceIdParameterSet")]
+        [Parameter(ParameterSetName = "SessionIdParameterSet")]
+        [Parameter(ParameterSetName = "NameParameterSet")]
+        [Parameter(ParameterSetName = "StateParameterSet")]
+        public int Newest { get; set; }
+
         protected override void ProcessRecord()
         {
 
@@ -114,12 +121,20 @@ namespace PSAsync
                 jobs = tempJobs.ToList();
             }
 
-            if(this.HasMoreData.IsPresent)
+            if (this.HasMoreData.IsPresent)
             {
                 var tempJobs = from j in jobs
                                where j.HasMoreData == true
                                select j;
                 jobs = tempJobs.ToList();
+            }
+
+            if (this.Newest > 0)
+            {
+                var tempJobs = from j in jobs
+                               orderby j.PSEndTime
+                               select j;
+                jobs = tempJobs.Take(this.Newest).ToList();
             }
 
             foreach (var job in jobs.OrderBy(j => j.Id))
