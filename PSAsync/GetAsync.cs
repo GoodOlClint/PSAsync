@@ -96,7 +96,7 @@ namespace PSAsync
             }
 
 
-            foreach (var job in jobs)
+            foreach (var job in jobs.OrderBy(j => j.Id))
             { WriteObject(job); }
         }
     }
