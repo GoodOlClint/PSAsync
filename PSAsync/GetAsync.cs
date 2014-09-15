@@ -39,6 +39,13 @@ namespace PSAsync
         [Parameter(ParameterSetName = "StateParameterSet")]
         public DateTime? Before { get; set; }
 
+        [Parameter(ParameterSetName = "CommandParameterSet")]
+        [Parameter(ParameterSetName = "InstanceIdParameterSet")]
+        [Parameter(ParameterSetName = "SessionIdParameterSet")]
+        [Parameter(ParameterSetName = "NameParameterSet")]
+        [Parameter(ParameterSetName = "StateParameterSet")]
+        public SwitchParameter HasMoreData { get; set; }
+
         protected override void ProcessRecord()
         {
 
@@ -107,6 +114,13 @@ namespace PSAsync
                 jobs = tempJobs.ToList();
             }
 
+            if(this.HasMoreData.IsPresent)
+            {
+                var tempJobs = from j in jobs
+                               where j.HasMoreData == true
+                               select j;
+                jobs = tempJobs.ToList();
+            }
 
             foreach (var job in jobs.OrderBy(j => j.Id))
             { WriteObject(job); }
