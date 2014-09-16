@@ -41,15 +41,22 @@ namespace PSAsync
 
         public bool IsOpen { get; private set; }
 
+        internal void Initalize()
+        {
+            if (!this.IsOpen)
+            {
+                if (this.Settings == null)
+                { this.Settings = new RunspaceSettings(); }
+                this.pool = RunspaceFactory.CreateRunspacePool(1, this.Settings.PoolSize);
+            }
+        }
+
         public void Open()
         {
             if (!this.IsOpen)
             {
+                this.Initalize();
                 this.IsOpen = true;
-                if (this.Settings == null)
-                { this.Settings = new RunspaceSettings(); }
-                if (this.pool == null)
-                { this.pool = RunspaceFactory.CreateRunspacePool(1, this.Settings.PoolSize); }
                 this.pool.Open();
             }
         }

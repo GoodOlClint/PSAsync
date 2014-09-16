@@ -48,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AsyncJob.cs" />
+    <Compile Include="NewRunspacePool.cs" />
     <Compile Include="RemoveAsync.cs" />
     <Compile Include="ReceiveAsync.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
