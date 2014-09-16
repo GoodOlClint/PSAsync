@@ -30,6 +30,14 @@ namespace PSAsync
         [Parameter(ParameterSetName = "StateParameterSet", Position = 1, Mandatory = true)]
         public JobState State { get; set; }
 
+        [Parameter(ParameterSetName = "SessionIdParameterSet")]
+        [Parameter(ParameterSetName = "FilterParameterSet")]
+        [Parameter(ParameterSetName = "InstanceIdParameterSet")]
+        [Parameter(ParameterSetName = "JobParameterSet")]
+        [Parameter(ParameterSetName = "NameParameterSet")]
+        [Parameter(ParameterSetName = "StateParameterSet")]
+        public SwitchParameter Any { get; set; }
+
         protected override void BeginProcessing()
         { waitHandles = new List<WaitHandle>(); }
 
