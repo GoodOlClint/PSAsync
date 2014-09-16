@@ -16,6 +16,9 @@ namespace PSAsync
         [Parameter(ParameterSetName = "StateParameterSet", Position = 1, Mandatory = true)]
         public JobState State { get; set; }
 
+        [Parameter(ParameterSetName = "SessionIdParameterSet", Position = 1, Mandatory = true)]
+        public int[] Id { get; set; }
+
         protected override void BeginProcessing()
         { waitHandles = new List<WaitHandle>(); }
 
