@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Management.Automation;
 using System.Threading;
+using System.Collections;
 
 namespace PSAsync
 {
@@ -18,6 +19,9 @@ namespace PSAsync
 
         [Parameter(ParameterSetName = "SessionIdParameterSet", Position = 1, Mandatory = true)]
         public int[] Id { get; set; }
+
+        [Parameter(ParameterSetName = "FilterParameterSet", Position = 1, Mandatory = true)]
+        public Hashtable Filter { get; set; }
 
         protected override void BeginProcessing()
         { waitHandles = new List<WaitHandle>(); }
