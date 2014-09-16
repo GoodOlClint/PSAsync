@@ -26,6 +26,9 @@ namespace PSAsync
         [Parameter(ParameterSetName = "InstanceIdParameterSet", Position = 1, Mandatory = true)]
         public Guid[] InstanceId { get; set; }
 
+        [Parameter(ParameterSetName = "NameParameterSet", Position = 1, Mandatory = true)]
+        public string[] Name { get; set; }
+
         protected override void BeginProcessing()
         { waitHandles = new List<WaitHandle>(); }
 
