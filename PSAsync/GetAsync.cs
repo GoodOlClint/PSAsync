@@ -11,19 +11,34 @@ namespace PSAsync
     [CmdletBinding(DefaultParameterSetName = "SessionIdParameterSet")]
     public class GetAsync : PSCmdlet
     {
-        [Parameter(ParameterSetName = "SessionIdParameterSet", Position = 1)]
+        [Parameter(ParameterSetName = "SessionIdParameterSet",
+            Position = 1,
+            ValueFromPipelineByPropertyName = true)]
         public int[] Id { get; set; }
 
-        [Parameter(ParameterSetName = "InstanceIdParameterSet", Mandatory = true)]
-        public Guid[] InstanceID { get; set; }
-
-        [Parameter(ParameterSetName = "NameParameterSet", Mandatory = true)]
-        public string[] Name { get; set; }
-
-        [Parameter(ParameterSetName = "CommandParameterSet", Mandatory = true)]
+        [Parameter(ParameterSetName = "CommandParameterSet",
+            Mandatory = true,
+            ValueFromPipelineByPropertyName = true)]
         public string[] Command { get; set; }
 
-        [Parameter(ParameterSetName = "StateParameterSet", Mandatory = true)]
+        [Parameter(ParameterSetName = "FilterParameterSet",
+            Mandatory = true,
+            ValueFromPipelineByPropertyName = true)]
+        public Hashtable Filter { get; set; }
+
+        [Parameter(ParameterSetName = "InstanceIdParameterSet",
+            Mandatory = true,
+            ValueFromPipelineByPropertyName = true)]
+        public Guid[] InstanceID { get; set; }
+
+        [Parameter(ParameterSetName = "NameParameterSet",
+            Mandatory = true,
+            ValueFromPipelineByPropertyName = true)]
+        public string[] Name { get; set; }
+
+        [Parameter(ParameterSetName = "StateParameterSet",
+            Mandatory = true,
+            ValueFromPipelineByPropertyName = true)]
         public JobState State { get; set; }
 
         [Parameter(ParameterSetName = "CommandParameterSet")]
@@ -53,9 +68,6 @@ namespace PSAsync
         [Parameter(ParameterSetName = "NameParameterSet")]
         [Parameter(ParameterSetName = "StateParameterSet")]
         public int Newest { get; set; }
-
-        [Parameter(ParameterSetName = "FilterParameterSet", Mandatory = true)]
-        public Hashtable Filter { get; set; }
 
         protected override void ProcessRecord()
         {
