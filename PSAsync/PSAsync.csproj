@@ -53,6 +53,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PSRunspace.cs" />
     <Compile Include="GetAsync.cs" />
+    <Compile Include="RunspaceSettings.cs" />
+    <Compile Include="GetRunspacePool.cs" />
     <Compile Include="WaitAsync.cs" />
     <Compile Include="StartAsync.cs" />
     <Compile Include="StopAsync.cs" />

@@ -32,23 +32,24 @@ namespace PSAsync
 
         private PSRunspace()
         {
-            this.PoolSize = 50;
             this.IsOpen = false;
             this.JobQueue = new ConcurrentDictionary<Guid, AsyncJob>();
         }
 
-        private RunspacePool pool;
+        internal RunspacePool pool;
+        public RunspaceSettings Settings { get; set; }
 
         public bool IsOpen { get; private set; }
-        public int PoolSize { get; set; }
 
         public void Open()
         {
             if (!this.IsOpen)
             {
                 this.IsOpen = true;
+                if (this.Settings == null)
+                { this.Settings = new RunspaceSettings(); }
                 if (this.pool == null)
-                {                    this.pool = RunspaceFactory.CreateRunspacePool(1, this.PoolSize);                }
+                { this.pool = RunspaceFactory.CreateRunspacePool(1, this.Settings.PoolSize); }
                 this.pool.Open();
             }
         }
