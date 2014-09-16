@@ -54,11 +54,7 @@ namespace PSAsync
         [Parameter(ParameterSetName = "StateParameterSet")]
         public int Newest { get; set; }
 
-        [Parameter(ParameterSetName = "CommandParameterSet")]
-        [Parameter(ParameterSetName = "InstanceIdParameterSet")]
-        [Parameter(ParameterSetName = "SessionIdParameterSet")]
-        [Parameter(ParameterSetName = "NameParameterSet")]
-        [Parameter(ParameterSetName = "StateParameterSet")]
+        [Parameter(ParameterSetName = "FilterParameterSet", Mandatory = true)]
         public Hashtable Filter { get; set; }
 
         protected override void ProcessRecord()
