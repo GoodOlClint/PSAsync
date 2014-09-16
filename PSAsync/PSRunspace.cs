@@ -30,11 +30,9 @@ namespace PSAsync
         }
         #endregion
 
-        private Semaphore WorkLimit;
-
         private PSRunspace()
         {
-            this.PoolSize = 20;
+            this.PoolSize = 50;
             this.IsOpen = false;
             this.JobQueue = new ConcurrentDictionary<Guid, AsyncJob>();
         }
@@ -50,36 +48,9 @@ namespace PSAsync
             {
                 this.IsOpen = true;
                 if (this.pool == null)
-                {
-                    this.pool = RunspaceFactory.CreateRunspacePool(1, this.PoolSize);
-                    this.WorkLimit = new Semaphore(this.PoolSize, this.PoolSize);
-                    Thread t = new Thread(this.StartJobs);
-                    t.Start();
-                }
+                {                    this.pool = RunspaceFactory.CreateRunspacePool(1, this.PoolSize);                }
                 this.pool.Open();
             }
-        }
-
-        private void StartJobs()
-        {
-            while (this.IsOpen)
-            {
-                var NewJobs = this.JobQueue.Where(j => j.Value.Started == false).Select(j => j.Value);
-                if (NewJobs.Count() > 0)
-                {
-                    this.WorkLimit.WaitOne();
-                    AsyncJob data = NewJobs.First();
-                    data.StartJob();
-                    data.StateChanged += data_StateChanged;
-                }
-                Thread.Sleep(250);
-            }
-        }
-
-        void data_StateChanged(object sender, JobStateEventArgs e)
-        {
-            if (e.JobStateInfo.State == JobState.Completed)
-            { this.WorkLimit.Release(); }
         }
 
         public PowerShell NewPipeline()
@@ -92,7 +63,10 @@ namespace PSAsync
 
         internal ConcurrentDictionary<Guid, AsyncJob> JobQueue;
         public void AddJob(AsyncJob Job)
-        { this.JobQueue.TryAdd(Job.InstanceId, Job); }
+        {
+            this.JobQueue.TryAdd(Job.InstanceId, Job);
+            Job.StartJob();
+        }
 
         public void Close()
         {
