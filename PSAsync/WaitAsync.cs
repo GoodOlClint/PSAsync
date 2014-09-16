@@ -9,14 +9,9 @@ using System.Collections;
 namespace PSAsync
 {
     [Cmdlet(VerbsLifecycle.Wait, "Async")]
+    [CmdletBinding(DefaultParameterSetName = "SessionIdParameterSet")]
     public class WaitAsync : PSCmdlet
     {
-        [Parameter(ValueFromPipeline = true)]
-        public AsyncJob[] Job { get; set; }
-
-        [Parameter(ParameterSetName = "StateParameterSet", Position = 1, Mandatory = true)]
-        public JobState State { get; set; }
-
         [Parameter(ParameterSetName = "SessionIdParameterSet", Position = 1, Mandatory = true)]
         public int[] Id { get; set; }
 
@@ -26,8 +21,14 @@ namespace PSAsync
         [Parameter(ParameterSetName = "InstanceIdParameterSet", Position = 1, Mandatory = true)]
         public Guid[] InstanceId { get; set; }
 
+        [Parameter(ParameterSetName = "JobParameterSet", Position = 1, Mandatory = true)]
+        public AsyncJob[] Job { get; set; }
+
         [Parameter(ParameterSetName = "NameParameterSet", Position = 1, Mandatory = true)]
         public string[] Name { get; set; }
+
+        [Parameter(ParameterSetName = "StateParameterSet", Position = 1, Mandatory = true)]
+        public JobState State { get; set; }
 
         protected override void BeginProcessing()
         { waitHandles = new List<WaitHandle>(); }
