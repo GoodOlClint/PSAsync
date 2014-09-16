@@ -13,6 +13,9 @@ namespace PSAsync
         [Parameter(ValueFromPipeline = true)]
         public AsyncJob[] Job { get; set; }
 
+        [Parameter(ParameterSetName = "StateParameterSet", Position = 1, Mandatory = true)]
+        public JobState State { get; set; }
+
         protected override void BeginProcessing()
         { waitHandles = new List<WaitHandle>(); }
 
