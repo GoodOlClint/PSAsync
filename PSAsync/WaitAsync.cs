@@ -89,6 +89,11 @@ namespace PSAsync
                               select j.Value);
             }
 
+            if (this.ParameterSetName == "JobParameterSet")
+            {
+                jobs.AddRange(this.Job);
+            }
+
             if (!this.Force.IsPresent)
             {
                 var tempJobs = from j in jobs
@@ -113,7 +118,7 @@ namespace PSAsync
 
                 }
             }
-            waitHandles.Add(this.Job.Select(j => j.Finished).First());
+            waitHandles.Add(jobs.Select(j => j.Finished).First());
         }
 
         protected override void EndProcessing()
