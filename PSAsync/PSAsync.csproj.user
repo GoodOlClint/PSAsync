@@ -3,6 +3,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <StartAction>Program</StartAction>
     <StartProgram>C:\WINDOWS\system32\WindowsPowerShell\v1.0\powershell.exe</StartProgram>
-    <StartArguments>-NoExit -Command &amp;"{Import-Module -Name .\PSAsync.dll; Get-Command -Module PSAsync}"</StartArguments>
+    <StartArguments>-NoExit -Command &amp;"{Import-Module -Name .\%3b Get-Command -Module PSAsync}"</StartArguments>
   </PropertyGroup>
 </Project>
