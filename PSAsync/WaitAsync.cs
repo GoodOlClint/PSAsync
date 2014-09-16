@@ -23,6 +23,9 @@ namespace PSAsync
         [Parameter(ParameterSetName = "FilterParameterSet", Position = 1, Mandatory = true)]
         public Hashtable Filter { get; set; }
 
+        [Parameter(ParameterSetName = "InstanceIdParameterSet", Position = 1, Mandatory = true)]
+        public Guid[] InstanceId { get; set; }
+
         protected override void BeginProcessing()
         { waitHandles = new List<WaitHandle>(); }
 
