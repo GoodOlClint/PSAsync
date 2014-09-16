@@ -5,6 +5,7 @@ using System.Text;
 using System.Management.Automation;
 using System.Threading;
 using System.Collections;
+using System.Threading.Tasks;
 
 namespace PSAsync
 {
@@ -21,7 +22,7 @@ namespace PSAsync
         [Parameter(ParameterSetName = "InstanceIdParameterSet", Position = 1, Mandatory = true)]
         public Guid[] InstanceId { get; set; }
 
-        [Parameter(ParameterSetName = "JobParameterSet", Position = 1, Mandatory = true)]
+        [Parameter(ParameterSetName = "JobParameterSet", Position = 1, Mandatory = true, ValueFromPipeline = true)]
         public AsyncJob[] Job { get; set; }
 
         [Parameter(ParameterSetName = "NameParameterSet", Position = 1, Mandatory = true)]
@@ -54,10 +55,12 @@ namespace PSAsync
         [Parameter(ParameterSetName = "StateParameterSet")]
         public int Timeout { get; set; }
 
-        protected override void BeginProcessing()
-        { waitHandles = new List<WaitHandle>(); }
+        public WaitAsync()
+        {
+            this.Timeout = -1; 
+            Tasks = new List<Task<AsyncJob>>();
+        }
 
-        List<WaitHandle> waitHandles;
         protected override void ProcessRecord()
         {
             List<AsyncJob> jobs = new List<AsyncJob>();
@@ -118,13 +121,42 @@ namespace PSAsync
 
                 }
             }
-            waitHandles.Add(jobs.Select(j => j.Finished).First());
+            
+
+            foreach (var job in jobs)
+            {
+                if (job.JobStateInfo.State == JobState.Completed ||
+                    job.JobStateInfo.State == JobState.Failed ||
+                    job.JobStateInfo.State == JobState.Stopped)
+                { continue; }
+                this.Tasks.Add(Task<AsyncJob>.Factory.StartNew((o) =>
+                      {
+                          var Job = (AsyncJob)o;
+                          Job.Finished.WaitOne();
+                          return Job;
+                      }, job));
+            }
         }
+
+        List<Task<AsyncJob>> Tasks;
 
         protected override void EndProcessing()
         {
-            foreach (var handle in this.waitHandles)
-            { handle.WaitOne(); }
+            var tasks = this.Tasks.ToArray();
+            if (this.Any.IsPresent)
+            {
+                int ret = Task.WaitAny(this.Tasks.ToArray(), this.Timeout);
+                var t = this.Tasks[ret];
+                WriteObject(t.Result);
+            }
+            else
+            {
+                if (Task.WaitAll(this.Tasks.ToArray(), this.Timeout))
+                {
+                    foreach (var t in this.Tasks)
+                    { WriteObject(t.Result); }
+                }
+            }
         }
     }
 }
