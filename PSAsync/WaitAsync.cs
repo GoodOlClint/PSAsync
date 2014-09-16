@@ -46,6 +46,14 @@ namespace PSAsync
         [Parameter(ParameterSetName = "StateParameterSet")]
         public SwitchParameter Force { get; set; }
 
+        [Parameter(ParameterSetName = "SessionIdParameterSet")]
+        [Parameter(ParameterSetName = "FilterParameterSet")]
+        [Parameter(ParameterSetName = "InstanceIdParameterSet")]
+        [Parameter(ParameterSetName = "JobParameterSet")]
+        [Parameter(ParameterSetName = "NameParameterSet")]
+        [Parameter(ParameterSetName = "StateParameterSet")]
+        public int Timeout { get; set; }
+
         protected override void BeginProcessing()
         { waitHandles = new List<WaitHandle>(); }
 
