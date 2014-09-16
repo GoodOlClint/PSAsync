@@ -59,7 +59,62 @@ namespace PSAsync
 
         List<WaitHandle> waitHandles;
         protected override void ProcessRecord()
-        { waitHandles.Add(this.Job.Select(j => j.Finished).First()); }
+        {
+            List<AsyncJob> jobs = new List<AsyncJob>();
+            if (this.ParameterSetName == "SessionIdParameterSet")
+            {
+                jobs.AddRange(from j in PSRunspace.Instance.JobQueue
+                              where this.Id.Contains(j.Value.Id)
+                              select j.Value);
+            }
+
+            if (this.ParameterSetName == "NameParameterSet")
+            {
+                jobs.AddRange(from j in PSRunspace.Instance.JobQueue
+                              where this.Name.Contains(j.Value.Name)
+                              select j.Value);
+            }
+
+            if (this.ParameterSetName == "StateParameterSet")
+            {
+                jobs.AddRange(from j in PSRunspace.Instance.JobQueue
+                              where j.Value.JobStateInfo.State == this.State
+                              select j.Value);
+            }
+
+            if (this.ParameterSetName == "InstanceIdParameterSet")
+            {
+                jobs.AddRange(from j in PSRunspace.Instance.JobQueue
+                              where this.InstanceId.Contains(j.Value.InstanceId)
+                              select j.Value);
+            }
+
+            if (!this.Force.IsPresent)
+            {
+                var tempJobs = from j in jobs
+                               where j.JobStateInfo.State != JobState.Disconnected
+                               where j.JobStateInfo.State != JobState.Suspended
+                               select j;
+                jobs = tempJobs.ToList();
+            }
+            if (this.Filter != null)
+            {
+                var props = typeof(AsyncJob).GetProperties();
+                var tempJobs = jobs.ConvertAll(j => j);
+                jobs.Clear();
+                foreach (DictionaryEntry pair in this.Filter)
+                {
+                    var myProp = (from prop in props
+                                  where prop.Name == pair.Key.ToString()
+                                  select prop).First();
+                    jobs.AddRange(from j in tempJobs
+                                  where myProp.GetValue(j, null) == pair.Value
+                                  select j);
+
+                }
+            }
+            waitHandles.Add(this.Job.Select(j => j.Finished).First());
+        }
 
         protected override void EndProcessing()
         {
