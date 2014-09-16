@@ -80,14 +80,20 @@ namespace PSAsync
             this.Started = true;
         }
 
-        public PSDataCollection<PSObject> GetJob()
+        public PSDataCollection<PSObject> GetJob(bool Keep)
         {
-            this.hasRead = true;
-            PSDataCollection<PSObject> data;
-            data = this.Pipeline.EndInvoke(this.AsyncResults);
-            foreach (var err in this.Pipeline.Streams.Error)
-            { data.Add(new PSObject(err)); }
-            this.Dispose();
+            PSDataCollection<PSObject> data = new PSDataCollection<PSObject>();
+            if (HasMoreData)
+            {
+                data = this.Pipeline.EndInvoke(this.AsyncResults);
+                foreach (var err in this.Pipeline.Streams.Error)
+                { data.Add(new PSObject(err)); }
+                if (!Keep)
+                {
+                    this.Dispose();
+                    this.hasRead = true;
+                }
+            }
             return data;
         }
 
