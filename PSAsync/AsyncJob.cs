@@ -29,7 +29,7 @@ namespace PSAsync
             : base(Script.ToString())
         {
             this.Pipeline = PSRunspace.Instance.NewPipeline();
-            this.Pipeline.AddScript(Script.ToString());
+            this.Pipeline.AddCommand(Script.ToString());
             this.Pipeline.InvocationStateChanged += Pipeline_InvocationStateChanged;
             this.PSJobTypeName = "RunspaceJob";
             this.Name = string.Format("Async{0}", this.Id);
@@ -45,7 +45,10 @@ namespace PSAsync
         public AsyncJob(ScriptBlock Script, Hashtable Parameters)
             : this(Script)
         {
-            this.Pipeline.AddParameters(Parameters);
+            foreach(DictionaryEntry param in Parameters)
+            {
+                this.Pipeline.AddParameter((string)param.Key, param.Value);
+            }
         }
 
 
