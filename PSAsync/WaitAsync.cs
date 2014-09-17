@@ -163,15 +163,19 @@ namespace PSAsync
                 int completedCount = 0;
                 while (this.Tasks.Count > 0)
                 {
-                    //double currentCount = this.Tasks.Count;
-                    int ret = Task.WaitAny(this.Tasks.ToArray(), this.Timeout);
-                    var t = this.Tasks[ret];
-                    this.Tasks.RemoveAt(ret);
-                    var progress = new ProgressRecord(1, "Wating for Async Threads", string.Format("{0} threads remaining", this.Tasks.Count));
+                    var progress = new ProgressRecord(1, "Wating for Async Threads", string.Format("Waiting for {0} threads", this.Tasks.Count));
                     progress.PercentComplete = (int)(completedCount / totalCount * 100);
+                    var running = PSRunspace.Instance.JobQueue.Where(j => j.Value.JobStateInfo.State == JobState.Running);
+                    progress.CurrentOperation = string.Format("{0} threads currently running", running.Count());
                     WriteProgress(progress);
-                    WriteObject(t.Result);
-                    completedCount++;
+                    int ret = Task.WaitAny(this.Tasks.ToArray(), 100);
+                    if (ret != -1)
+                    {
+                        var t = this.Tasks[ret];
+                        this.Tasks.RemoveAt(ret);
+                        WriteObject(t.Result);
+                        completedCount++;
+                    }
                 }
             }
             else
