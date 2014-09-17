@@ -69,7 +69,7 @@ namespace PSAsync
         {
             while (this.IsOpen)
             {
-                var NewJobs = this.JobQueue.Where(j => j.Value.Started == false).Select(j => j.Value).OrderBy(j => j.Id);
+                var NewJobs = this.JobQueue.Where(j => j.Value.JobStateInfo.State == JobState.NotStarted).Select(j => j.Value).OrderBy(j => j.Id);
                 if (NewJobs.Count() > 0)
                 {
                     this.WorkLimit.WaitOne();

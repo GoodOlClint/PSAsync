@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections;
-using System.Linq;
-using System.Text;
 using System.Management.Automation;
 using System.Threading;
 
@@ -10,6 +7,24 @@ namespace PSAsync
 {
     public class AsyncJob : Job
     {
+        #region Public Properties
+        private bool hasMoreData = true;
+        public override bool HasMoreData
+        { get { return this.hasMoreData; } }
+
+        public override string Location
+        { get { return "localhost"; } }
+
+        public override string StatusMessage
+        { get { return this.Pipeline.InvocationStateInfo.State.ToString(); } }
+        #endregion
+
+        #region Private Properties
+        private IAsyncResult AsyncResults { get; set; }
+        private PowerShell Pipeline { get; set; }
+        #endregion
+
+        #region Constructors
         public AsyncJob(ScriptBlock Script)
             : base(Script.ToString())
         {
@@ -20,6 +35,60 @@ namespace PSAsync
             this.Name = string.Format("Async{0}", this.Id);
         }
 
+        public AsyncJob(ScriptBlock Script, object[] Arguments)
+            : this(Script)
+        {
+            foreach (var arg in Arguments)
+            { this.Pipeline.AddArgument(arg); }
+        }
+
+        public AsyncJob(ScriptBlock Script, Hashtable Parameters)
+            : this(Script)
+        {
+            this.Pipeline.AddParameters(Parameters);
+        }
+
+
+        #endregion
+
+        #region Public Methods
+        public override void StopJob()
+        { this.Pipeline.Stop(); }
+
+        public void StartJob()
+        {
+            this.AsyncResults = this.Pipeline.BeginInvoke();
+        }
+
+        public PSDataCollection<PSObject> GetJob(bool Keep)
+        {
+            PSDataCollection<PSObject> data = new PSDataCollection<PSObject>();
+            if (HasMoreData)
+            {
+                data = this.Output;
+                if (!Keep)
+                {
+                    this.Dispose();
+                    this.hasMoreData = true;
+                }
+            }
+            return data;
+        }
+        #endregion
+
+        #region Private Methods
+        private void GetData()
+        {
+            this.Output = this.Pipeline.EndInvoke(this.AsyncResults);
+            if (this.Output.Count == 0)
+            { this.hasMoreData = false; }
+            this.Error = this.Pipeline.Streams.Error;
+            this.Warning = this.Pipeline.Streams.Warning;
+            this.Verbose = this.Pipeline.Streams.Verbose;
+        }
+        #endregion
+
+        #region Event Handlers
         void Pipeline_InvocationStateChanged(object sender, PSInvocationStateChangedEventArgs e)
         {
             switch (e.InvocationStateInfo.State)
@@ -49,71 +118,9 @@ namespace PSAsync
                 t.Start();
             }
         }
-        private void GetData()
-        {
-            this.Output = this.Pipeline.EndInvoke(this.AsyncResults);
-            if (this.Output.Count == 0)
-            { this.hasRead = true; }
-            this.Error = this.Pipeline.Streams.Error;
-            this.Warning = this.Pipeline.Streams.Warning;
-            this.Verbose = this.Pipeline.Streams.Verbose;
+        #endregion
 
-        }
-
-        public AsyncJob(ScriptBlock Script, object[] Arguments)
-            : this(Script)
-        {
-            foreach (var arg in Arguments)
-            { this.Pipeline.AddArgument(arg); }
-        }
-
-        public AsyncJob(ScriptBlock Script, Hashtable Parameters)
-            : this(Script)
-        {
-            this.Pipeline.AddParameters(Parameters);
-        }
-
-        private IAsyncResult AsyncResults { get; set; }
-        private PowerShell Pipeline { get; set; }
-        private bool hasRead = false;
-
-        public bool IsFinished { get { return this.AsyncResults.IsCompleted; } }
-        internal bool Started { get; set; }
-
-        public override bool HasMoreData
-        { get { return !this.hasRead; } }
-
-        public override string Location
-        { get { return "localhost"; } }
-
-        public override string StatusMessage
-        { get { return this.Pipeline.InvocationStateInfo.State.ToString(); } }
-
-        public override void StopJob()
-        { this.Pipeline.Stop(); }
-
-        public void StartJob()
-        {
-            this.AsyncResults = this.Pipeline.BeginInvoke();
-            this.Started = true;
-        }
-
-        public PSDataCollection<PSObject> GetJob(bool Keep)
-        {
-            PSDataCollection<PSObject> data = new PSDataCollection<PSObject>();
-            if (HasMoreData)
-            {
-                data = this.Output;
-
-                if (!Keep)
-                {
-                    this.Dispose();
-                    this.hasRead = true;
-                }
-            }
-            return data;
-        }
-
+        #region IDisposable
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -124,5 +131,6 @@ namespace PSAsync
             }
             base.Dispose(disposing);
         }
+        #endregion
     }
 }
