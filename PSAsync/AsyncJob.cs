@@ -11,11 +11,13 @@ namespace PSAsync
     public class AsyncJob : Job
     {
         public AsyncJob(ScriptBlock Script)
+            : base(Script.ToString())
         {
             this.Pipeline = PSRunspace.Instance.NewPipeline();
             this.Pipeline.AddScript(Script.ToString());
             this.Pipeline.InvocationStateChanged += Pipeline_InvocationStateChanged;
             this.PSJobTypeName = "RunspaceJob";
+            this.Name = string.Format("Async{0}", this.Id);
         }
 
         void Pipeline_InvocationStateChanged(object sender, PSInvocationStateChangedEventArgs e)
@@ -82,7 +84,7 @@ namespace PSAsync
         { get { return !this.hasRead; } }
 
         public override string Location
-        { get { return Environment.MachineName; } }
+        { get { return "localhost"; } }
 
         public override string StatusMessage
         { get { return this.Pipeline.InvocationStateInfo.State.ToString(); } }
