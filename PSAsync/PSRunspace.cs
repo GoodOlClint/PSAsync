@@ -69,7 +69,7 @@ namespace PSAsync
         {
             while (this.IsOpen)
             {
-                var NewJobs = this.JobQueue.Where(j => j.Value.Started == false).Select(j => j.Value);
+                var NewJobs = this.JobQueue.Where(j => j.Value.Started == false).Select(j => j.Value).OrderBy(j => j.Id);
                 if (NewJobs.Count() > 0)
                 {
                     this.WorkLimit.WaitOne();
@@ -83,7 +83,7 @@ namespace PSAsync
 
         void data_StateChanged(object sender, JobStateEventArgs e)
         {
-            if (e.JobStateInfo.State == JobState.Completed)
+            if (e.JobStateInfo.State != JobState.Running)
             { this.WorkLimit.Release(); }
         }
 
