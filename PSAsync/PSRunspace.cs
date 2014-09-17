@@ -120,7 +120,7 @@ namespace PSAsync
                     data.StartJob();
                     data.StateChanged += data_StateChanged;
                 }
-                Thread.Sleep(250);
+                Thread.Sleep(20);
             }
         }
         #endregion
