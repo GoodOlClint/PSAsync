@@ -30,6 +30,8 @@ namespace PSAsync
         }
         #endregion
 
+        private Semaphore WorkLimit;
+
         private PSRunspace()
         {
             this.IsOpen = false;
@@ -45,7 +47,12 @@ namespace PSAsync
         internal void Initalize()
         {
             if (!this.IsOpen)
-            { this.pool = RunspaceFactory.CreateRunspacePool(1, this.Settings.PoolSize); }
+            {
+                this.pool = RunspaceFactory.CreateRunspacePool(1, this.Settings.PoolSize);
+                this.WorkLimit = new Semaphore(this.Settings.PoolSize, this.Settings.PoolSize);
+                Thread t = new Thread(this.StartJobs);
+                t.Start();
+            }
         }
 
         public void Open()
@@ -58,6 +65,28 @@ namespace PSAsync
             }
         }
 
+        private void StartJobs()
+        {
+            while (this.IsOpen)
+            {
+                var NewJobs = this.JobQueue.Where(j => j.Value.Started == false).Select(j => j.Value);
+                if (NewJobs.Count() > 0)
+                {
+                    this.WorkLimit.WaitOne();
+                    AsyncJob data = NewJobs.First();
+                    data.StartJob();
+                    data.StateChanged += data_StateChanged;
+                }
+                Thread.Sleep(250);
+            }
+        }
+
+        void data_StateChanged(object sender, JobStateEventArgs e)
+        {
+            if (e.JobStateInfo.State == JobState.Completed)
+            { this.WorkLimit.Release(); }
+        }
+
         public PowerShell NewPipeline()
         {
             this.Open();
@@ -68,10 +97,7 @@ namespace PSAsync
 
         internal ConcurrentDictionary<Guid, AsyncJob> JobQueue;
         public void AddJob(AsyncJob Job)
-        {
-            this.JobQueue.TryAdd(Job.InstanceId, Job);
-            Job.StartJob();
-        }
+        { this.JobQueue.TryAdd(Job.InstanceId, Job); }
 
         public void Close()
         {
