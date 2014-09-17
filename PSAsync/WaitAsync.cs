@@ -55,9 +55,17 @@ namespace PSAsync
         [Parameter(ParameterSetName = "StateParameterSet")]
         public int Timeout { get; set; }
 
+        [Parameter(ParameterSetName = "SessionIdParameterSet")]
+        [Parameter(ParameterSetName = "FilterParameterSet")]
+        [Parameter(ParameterSetName = "InstanceIdParameterSet")]
+        [Parameter(ParameterSetName = "JobParameterSet")]
+        [Parameter(ParameterSetName = "NameParameterSet")]
+        [Parameter(ParameterSetName = "StateParameterSet")]
+        public SwitchParameter ShowProgress { get; set; }
+
         public WaitAsync()
         {
-            this.Timeout = -1; 
+            this.Timeout = -1;
             Tasks = new List<Task<AsyncJob>>();
         }
 
@@ -121,7 +129,7 @@ namespace PSAsync
 
                 }
             }
-            
+
 
             foreach (var job in jobs)
             {
@@ -148,6 +156,23 @@ namespace PSAsync
                 int ret = Task.WaitAny(this.Tasks.ToArray(), this.Timeout);
                 var t = this.Tasks[ret];
                 WriteObject(t.Result);
+            }
+            else if (this.ShowProgress.IsPresent)
+            {
+                double totalCount = this.Tasks.Count;
+                int completedCount = 0;
+                while (this.Tasks.Count > 0)
+                {
+                    //double currentCount = this.Tasks.Count;
+                    int ret = Task.WaitAny(this.Tasks.ToArray(), this.Timeout);
+                    var t = this.Tasks[ret];
+                    this.Tasks.RemoveAt(ret);
+                    var progress = new ProgressRecord(1, "Wating for Async Threads", string.Format("{0} threads remaining", this.Tasks.Count));
+                    progress.PercentComplete = (int)(completedCount / totalCount * 100);
+                    WriteProgress(progress);
+                    WriteObject(t.Result);
+                    completedCount++;
+                }
             }
             else
             {
