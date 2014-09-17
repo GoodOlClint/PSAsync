@@ -67,10 +67,7 @@ namespace PSAsync
             {
                 data = this.Output;
                 if (!Keep)
-                {
-                    this.Dispose();
-                    this.hasMoreData = true;
-                }
+                { this.hasMoreData = false; }
             }
             return data;
         }
