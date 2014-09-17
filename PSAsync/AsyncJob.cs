@@ -4,6 +4,7 @@ using System.Collections;
 using System.Linq;
 using System.Text;
 using System.Management.Automation;
+using System.Threading;
 
 namespace PSAsync
 {
@@ -40,6 +41,21 @@ namespace PSAsync
                     this.SetJobState(JobState.Stopping);
                     break;
             }
+            if (e.InvocationStateInfo.State == PSInvocationState.Completed)
+            {
+                Thread t = new Thread(GetData);
+                t.Start();
+            }
+        }
+        private void GetData()
+        {
+            this.Output = this.Pipeline.EndInvoke(this.AsyncResults);
+            if (this.Output.Count == 0)
+            { this.hasRead = true; }
+            this.Error = this.Pipeline.Streams.Error;
+            this.Warning = this.Pipeline.Streams.Warning;
+            this.Verbose = this.Pipeline.Streams.Verbose;
+
         }
 
         public AsyncJob(ScriptBlock Script, object[] Arguments)
@@ -85,9 +101,8 @@ namespace PSAsync
             PSDataCollection<PSObject> data = new PSDataCollection<PSObject>();
             if (HasMoreData)
             {
-                data = this.Pipeline.EndInvoke(this.AsyncResults);
-                foreach (var err in this.Pipeline.Streams.Error)
-                { data.Add(new PSObject(err)); }
+                data = this.Output;
+
                 if (!Keep)
                 {
                     this.Dispose();
