@@ -1,14 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
 using System.Threading;
-using System.Linq;
-using System;
 
 namespace PSAsync
 {
-    public sealed class PSRunspace
+    public sealed class PSRunspace : IDisposable
     {
         #region Singleton Instance
         private static volatile PSRunspace instance;
@@ -30,29 +29,36 @@ namespace PSAsync
         }
         #endregion
 
-        private Semaphore WorkLimit;
+        #region Public Properties
+        public RunspaceSettings Settings { get; set; }
+        public bool IsOpen { get; private set; }
+        #endregion
 
+        #region Internal Properties
+        internal RunspacePool pool { get; set; }
+        internal ConcurrentDictionary<Guid, AsyncJob> JobQueue { get; set; }
+        #endregion
+
+        #region Private Properties
+        private Semaphore WorkLimit { get; set; }
+        #endregion
+
+        #region Constructor
         private PSRunspace()
         {
             this.IsOpen = false;
             this.JobQueue = new ConcurrentDictionary<Guid, AsyncJob>();
             this.Settings = new RunspaceSettings();
         }
+        #endregion
 
-        internal RunspacePool pool;
-        public RunspaceSettings Settings { get; set; }
-
-        public bool IsOpen { get; private set; }
-
-        internal void Initalize()
+        #region Public Methods
+        public PowerShell NewPipeline()
         {
-            if (!this.IsOpen)
-            {
-                this.pool = RunspaceFactory.CreateRunspacePool(1, this.Settings.PoolSize);
-                this.WorkLimit = new Semaphore(this.Settings.PoolSize, this.Settings.PoolSize);
-                Thread t = new Thread(this.StartJobs);
-                t.Start();
-            }
+            this.Open();
+            var pipeline = PowerShell.Create();
+            pipeline.RunspacePool = this.pool;
+            return pipeline;
         }
 
         public void Open()
@@ -65,6 +71,43 @@ namespace PSAsync
             }
         }
 
+        public void AddJob(AsyncJob Job)
+        { this.JobQueue.TryAdd(Job.InstanceId, Job); }
+
+        public void Close()
+        {
+            if (!this.IsOpen)
+            {
+                this.IsOpen = false;
+                if (this.pool != null)
+                {
+                    this.pool.Close();
+                    this.pool.Dispose();
+                    this.pool = null;
+                }
+                if (this.JobQueue != null)
+                {
+                    this.JobQueue.Clear();
+                    this.JobQueue = null;
+                }
+            }
+        }
+        #endregion
+
+        #region Internal Methods
+        internal void Initalize()
+        {
+            if (!this.IsOpen)
+            {
+                this.pool = RunspaceFactory.CreateRunspacePool(1, this.Settings.PoolSize);
+                this.WorkLimit = new Semaphore(this.Settings.PoolSize, this.Settings.PoolSize);
+                Thread t = new Thread(this.StartJobs);
+                t.Start();
+            }
+        }
+        #endregion
+
+        #region Private Methods
         private void StartJobs()
         {
             while (this.IsOpen)
@@ -80,43 +123,31 @@ namespace PSAsync
                 Thread.Sleep(250);
             }
         }
+        #endregion
 
+        #region Event Handlers
         void data_StateChanged(object sender, JobStateEventArgs e)
         {
             if (e.JobStateInfo.State != JobState.Running)
             { this.WorkLimit.Release(); }
         }
+        #endregion
 
-        public PowerShell NewPipeline()
+        #region IDisposable
+        public void Dispose()
+        { this.Dispose(true); }
+
+        private void Dispose(bool disposing)
         {
-            this.Open();
-            var pipeline = PowerShell.Create();
-            pipeline.RunspacePool = this.pool;
-            return pipeline;
-        }
-
-        internal ConcurrentDictionary<Guid, AsyncJob> JobQueue;
-        public void AddJob(AsyncJob Job)
-        { this.JobQueue.TryAdd(Job.InstanceId, Job); }
-
-        public void Close()
-        {
-            if (!this.IsOpen)
+            if (disposing)
             {
-                this.IsOpen = false;
-                if (null != this.pool)
-                {
-                    this.pool.Close();
-                    this.pool.Dispose();
-                    this.pool = null;
-                }
+                this.Close();
+                this.WorkLimit.Dispose();
             }
         }
 
         ~PSRunspace()
-        {
-            if (this.IsOpen)
-            { this.Close(); }
-        }
+        { this.Dispose(false); }
+        #endregion
     }
 }
