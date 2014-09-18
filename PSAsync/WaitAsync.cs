@@ -210,7 +210,7 @@ namespace PSAsync
                         progress.StatusDescription = string.Format("{0} out of {1} complete", readCount, threadCount);
                     }
                     var running = PSRunspace.Instance.JobQueue.Where(j => j.Value.JobStateInfo.State == JobState.Running);
-                    progress.CurrentOperation = string.Format("{0} threads currently running", running.Count());
+                    progress.CurrentOperation = string.Format("{0}/{1} threads currently running", running.Count(), PSRunspace.Instance.Settings.PoolSize);
                     try
                     { WriteProgress(progress); }
                     catch (PipelineStoppedException ex)
@@ -236,7 +236,8 @@ namespace PSAsync
                     Thread.Sleep(100);
                 }
             }
-            this.cts.Cancel();
+            if (readCount != threadCount)
+            { this.cts.Cancel(); }
         }
     }
 }

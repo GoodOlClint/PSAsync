@@ -48,14 +48,16 @@ namespace PSAsync
 
             foreach (AsyncJob j in jobs)
             {
-                WriteObject(j.GetJob(false));
+                WriteObject(j.Output, true);
+                foreach (var error in j.Error)
+                { WriteError(error); }
+
             }
         }
 
         protected override void EndProcessing()
         {
             base.EndProcessing();
-            this.JobQueue.Clear();
         }
     }
 }
