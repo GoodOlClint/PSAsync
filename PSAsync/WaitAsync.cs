@@ -193,11 +193,6 @@ namespace PSAsync
                     { WriteObject(t.Result); }
                 }
             }
-        }
-
-        protected override void EndProcessing()
-        {
-            base.EndProcessing();
             this.JobQueue.Clear();
         }
     }
