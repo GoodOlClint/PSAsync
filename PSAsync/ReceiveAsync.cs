@@ -19,30 +19,43 @@ namespace PSAsync
         [Parameter(ParameterSetName = "Job", ValueFromPipeline = true)]
         public AsyncJob[] Job { get; set; }
 
+        public List<AsyncJob> JobQueue;
+        protected override void BeginProcessing()
+        {
+            base.BeginProcessing();
+            this.JobQueue = PSRunspace.Instance.JobQueue.Select(j => j.Value).ToList();
+        }
+
         protected override void ProcessRecord()
         {
             List<AsyncJob> jobs = new List<AsyncJob>();
             if (this.ParameterSetName == "ID")
             {
-                jobs.AddRange(from j in PSRunspace.Instance.JobQueue
-                              where this.Id.Contains(j.Value.Id)
-                              select j.Value);
+                jobs.AddRange(from j in this.JobQueue
+                              where this.Id.Contains(j.Id)
+                              select j);
             }
-            
+
             if (this.ParameterSetName == "Name")
             {
-                jobs.AddRange(from j in PSRunspace.Instance.JobQueue
-                              where this.Name.Contains(j.Value.Name)
-                              select j.Value);
+                jobs.AddRange(from j in this.JobQueue
+                              where this.Name.Contains(j.Name)
+                              select j);
             }
-            
-            if(this.ParameterSetName == "Job")
+
+            if (this.ParameterSetName == "Job")
             { jobs.AddRange(this.Job); }
 
             foreach (AsyncJob j in jobs)
             {
                 WriteObject(j.GetJob(false));
             }
+        }
+
+        protected override void EndProcessing()
+        {
+            base.EndProcessing();
+            this.JobQueue.Clear();
         }
     }
 }
