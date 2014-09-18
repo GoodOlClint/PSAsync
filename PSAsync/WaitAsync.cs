@@ -1,10 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Management.Automation;
 using System.Threading;
-using System.Collections;
 using System.Threading.Tasks;
 
 namespace PSAsync
@@ -66,7 +65,9 @@ namespace PSAsync
         public WaitAsync()
         {
             this.Timeout = -1;
-            Tasks = new List<Task<AsyncJob>>();
+            this.cts = new CancellationTokenSource();
+            this.Queue = new Queue<AsyncJob>();
+            this.queueLock = new object();
         }
 
         public List<AsyncJob> JobQueue;
@@ -81,30 +82,30 @@ namespace PSAsync
             List<AsyncJob> jobs = new List<AsyncJob>();
             if (this.ParameterSetName == "SessionIdParameterSet")
             {
-                jobs.AddRange(from j in this.JobQueue
-                              where this.Id.Contains(j.Id)
-                              select j);
+                jobs.AddRange(from j in PSRunspace.Instance.JobQueue
+                              where this.Id.Contains(j.Value.Id)
+                              select j.Value);
             }
 
             if (this.ParameterSetName == "NameParameterSet")
             {
-                jobs.AddRange(from j in this.JobQueue
-                              where this.Name.Contains(j.Name)
-                              select j);
+                jobs.AddRange(from j in PSRunspace.Instance.JobQueue
+                              where this.Name.Contains(j.Value.Name)
+                              select j.Value);
             }
 
             if (this.ParameterSetName == "StateParameterSet")
             {
-                jobs.AddRange(from j in this.JobQueue
-                              where j.JobStateInfo.State == this.State
-                              select j);
+                jobs.AddRange(from j in PSRunspace.Instance.JobQueue
+                              where j.Value.JobStateInfo.State == this.State
+                              select j.Value);
             }
 
             if (this.ParameterSetName == "InstanceIdParameterSet")
             {
-                jobs.AddRange(from j in this.JobQueue
-                              where this.InstanceId.Contains(j.InstanceId)
-                              select j);
+                jobs.AddRange(from j in PSRunspace.Instance.JobQueue
+                              where this.InstanceId.Contains(j.Value.InstanceId)
+                              select j.Value);
             }
 
             if (this.ParameterSetName == "JobParameterSet")
@@ -143,57 +144,99 @@ namespace PSAsync
                 if (job.JobStateInfo.State == JobState.Completed ||
                     job.JobStateInfo.State == JobState.Failed ||
                     job.JobStateInfo.State == JobState.Stopped)
-                { continue; }
-                this.Tasks.Add(Task<AsyncJob>.Factory.StartNew((o) =>
-                      {
-                          var Job = (AsyncJob)o;
-                          Job.Finished.WaitOne();
-                          return Job;
-                      }, job));
+                {
+                    try
+                    { WriteObject(Job); }
+                    catch (PipelineStoppedException ex)
+                    { }
+                    continue;
+                }
+
+                var action = new Action<object>((o) =>
+                {
+                    var Job = (AsyncJob)o;
+                    if (Job.Finished.WaitOne(this.Timeout))
+                    {
+                        lock (queueLock)
+                        { this.Queue.Enqueue(Job); }
+                    }
+                });
+                Task.Factory.StartNew(action, job, this.cts.Token);
+                threadCount++;
             }
         }
 
-        List<Task<AsyncJob>> Tasks;
+        CancellationTokenSource cts;
+        private Queue<AsyncJob> Queue { get; set; }
+        private object queueLock { get; set; }
+        private double threadCount;
 
         protected override void EndProcessing()
         {
-            var tasks = this.Tasks.ToArray();
+            double readCount = 0;
             if (this.Any.IsPresent)
             {
-                int ret = Task.WaitAny(this.Tasks.ToArray(), this.Timeout);
-                var t = this.Tasks[ret];
-                WriteObject(t.Result);
+                while (readCount == 0)
+                {
+                    while (Queue.Count > 0)
+                    {
+                        AsyncJob Job;
+                        lock (queueLock)
+                        { Job = this.Queue.Dequeue(); }
+                        try
+                        { WriteObject(Job); }
+                        catch (PipelineStoppedException ex)
+                        { }
+                        readCount++;
+                    }
+                }
             }
             else if (this.ShowProgress.IsPresent)
             {
-                double totalCount = this.Tasks.Count;
-                int completedCount = 0;
-                while (this.Tasks.Count > 0)
+                var progress = new ProgressRecord(1, "Wating for Async Threads", string.Format("{0} out of {1} complete", readCount, threadCount));
+                while (readCount < threadCount)
                 {
-                    var progress = new ProgressRecord(1, "Wating for Async Threads", string.Format("Waiting for {0} threads", this.Tasks.Count));
-                    progress.PercentComplete = (int)(completedCount / totalCount * 100);
-                    var running = this.JobQueue.Where(j => j.JobStateInfo.State == JobState.Running);
-                    progress.CurrentOperation = string.Format("{0} threads currently running", running.Count());
-                    WriteProgress(progress);
-                    int ret = Task.WaitAny(this.Tasks.ToArray(), 100);
-                    if (ret != -1)
+                    while (Queue.Count > 0)
                     {
-                        var t = this.Tasks[ret];
-                        this.Tasks.RemoveAt(ret);
-                        WriteObject(t.Result);
-                        completedCount++;
+                        AsyncJob Job;
+                        lock (queueLock)
+                        { Job = this.Queue.Dequeue(); }
+                        try
+                        { WriteObject(Job); }
+                        catch (PipelineStoppedException ex)
+                        { }
+                        readCount++;
+                        progress.PercentComplete = (int)(readCount / threadCount * 100);
+                        progress.StatusDescription = string.Format("{0} out of {1} complete", readCount, threadCount);
                     }
+                    var running = PSRunspace.Instance.JobQueue.Where(j => j.Value.JobStateInfo.State == JobState.Running);
+                    progress.CurrentOperation = string.Format("{0} threads currently running", running.Count());
+                    try
+                    { WriteProgress(progress); }
+                    catch (PipelineStoppedException ex)
+                    { }
+                    Thread.Sleep(100);
                 }
             }
             else
             {
-                if (Task.WaitAll(this.Tasks.ToArray(), this.Timeout))
+                while (readCount < threadCount)
                 {
-                    foreach (var t in this.Tasks)
-                    { WriteObject(t.Result); }
+                    while (Queue.Count > 0)
+                    {
+                        AsyncJob Job;
+                        lock (queueLock)
+                        { Job = this.Queue.Dequeue(); }
+                        try
+                        { WriteObject(Job); }
+                        catch (PipelineStoppedException ex)
+                        { }
+                        readCount++;
+                    }
+                    Thread.Sleep(100);
                 }
             }
-            this.JobQueue.Clear();
+            this.cts.Cancel();
         }
     }
 }
