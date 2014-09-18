@@ -148,7 +148,7 @@ namespace PSAsync
             if (this.Newest > 0)
             {
                 var tempJobs = from j in jobs
-                               orderby j.PSEndTime
+                               orderby j.PSEndTime descending
                                select j;
                 jobs = tempJobs.Take(this.Newest).ToList();
             }
