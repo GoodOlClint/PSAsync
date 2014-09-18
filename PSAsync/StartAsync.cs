@@ -1,35 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections;
-using System.Linq;
-using System.Text;
+﻿using System.Collections;
 using System.Management.Automation;
-using System.Management.Automation.Runspaces;
 
 namespace PSAsync
 {
-    [Cmdlet(VerbsLifecycle.Start, "Async")]
-    [CmdletBinding(DefaultParameterSetName = "ScriptBlock")]
+    [Cmdlet(VerbsLifecycle.Start, "Async", DefaultParameterSetName = "ScriptBlock")]
+    [OutputType(new[] { typeof(AsyncJob) })]
     public class StartAsync : PSCmdlet
     {
-        [Parameter(ParameterSetName = "ScriptBlock", Position = 1, Mandatory = true)]
         [Alias("Script", "Code")]
+        [Parameter(ParameterSetName = "ScriptBlock", Mandatory = true, Position = 0)]
+        [ValidateNotNullOrEmpty]
         public ScriptBlock ScriptBlock { get; set; }
 
-        [Parameter(ParameterSetName = "FilePath", Position = 1, Mandatory = true)]
         [Alias("File", "Path")]
+        [Parameter(ParameterSetName = "FilePath", Mandatory = true, Position = 0)]
+        [ValidateNotNullOrEmpty]
         public string FilePath { get; set; }
 
-        [Parameter()]
+        [Parameter(ParameterSetName = "FilePath", Position = 1)]
+        [Parameter(ParameterSetName = "ScriptBlock", Position = 1)]
         [Alias("Init")]
         public ScriptBlock InitializationScript { get; set; }
 
-        [Parameter(ParameterSetName = "ScriptBlock", Position = 2)]
-        [Parameter(ParameterSetName = "FilePath", Position = 2)]
+        [Parameter(ParameterSetName = "FilePath")]
+        [Parameter(ParameterSetName = "ScriptBlock")]
         public object[] ArgumentList { get; set; }
 
-        [Parameter(ParameterSetName = "ScriptBlock", Position = 2)]
-        [Parameter(ParameterSetName = "FilePath", Position = 2)]
+        [Parameter(ParameterSetName = "FilePath")]
+        [Parameter(ParameterSetName = "ScriptBlock")]
         public Hashtable Parameters { get; set; }
 
         protected override void ProcessRecord()
@@ -55,3 +53,4 @@ namespace PSAsync
         }
     }
 }
+
