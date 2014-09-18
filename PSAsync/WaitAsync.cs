@@ -69,35 +69,42 @@ namespace PSAsync
             Tasks = new List<Task<AsyncJob>>();
         }
 
+        public List<AsyncJob> JobQueue;
+        protected override void BeginProcessing()
+        {
+            base.BeginProcessing();
+            this.JobQueue = PSRunspace.Instance.JobQueue.Select(j => j.Value).ToList();
+        }
+
         protected override void ProcessRecord()
         {
             List<AsyncJob> jobs = new List<AsyncJob>();
             if (this.ParameterSetName == "SessionIdParameterSet")
             {
-                jobs.AddRange(from j in PSRunspace.Instance.JobQueue
-                              where this.Id.Contains(j.Value.Id)
-                              select j.Value);
+                jobs.AddRange(from j in this.JobQueue
+                              where this.Id.Contains(j.Id)
+                              select j);
             }
 
             if (this.ParameterSetName == "NameParameterSet")
             {
-                jobs.AddRange(from j in PSRunspace.Instance.JobQueue
-                              where this.Name.Contains(j.Value.Name)
-                              select j.Value);
+                jobs.AddRange(from j in this.JobQueue
+                              where this.Name.Contains(j.Name)
+                              select j);
             }
 
             if (this.ParameterSetName == "StateParameterSet")
             {
-                jobs.AddRange(from j in PSRunspace.Instance.JobQueue
-                              where j.Value.JobStateInfo.State == this.State
-                              select j.Value);
+                jobs.AddRange(from j in this.JobQueue
+                              where j.JobStateInfo.State == this.State
+                              select j);
             }
 
             if (this.ParameterSetName == "InstanceIdParameterSet")
             {
-                jobs.AddRange(from j in PSRunspace.Instance.JobQueue
-                              where this.InstanceId.Contains(j.Value.InstanceId)
-                              select j.Value);
+                jobs.AddRange(from j in this.JobQueue
+                              where this.InstanceId.Contains(j.InstanceId)
+                              select j);
             }
 
             if (this.ParameterSetName == "JobParameterSet")
@@ -165,7 +172,7 @@ namespace PSAsync
                 {
                     var progress = new ProgressRecord(1, "Wating for Async Threads", string.Format("Waiting for {0} threads", this.Tasks.Count));
                     progress.PercentComplete = (int)(completedCount / totalCount * 100);
-                    var running = PSRunspace.Instance.JobQueue.Where(j => j.Value.JobStateInfo.State == JobState.Running);
+                    var running = this.JobQueue.Where(j => j.JobStateInfo.State == JobState.Running);
                     progress.CurrentOperation = string.Format("{0} threads currently running", running.Count());
                     WriteProgress(progress);
                     int ret = Task.WaitAny(this.Tasks.ToArray(), 100);
@@ -186,6 +193,12 @@ namespace PSAsync
                     { WriteObject(t.Result); }
                 }
             }
+        }
+
+        protected override void EndProcessing()
+        {
+            base.EndProcessing();
+            this.JobQueue.Clear();
         }
     }
 }
