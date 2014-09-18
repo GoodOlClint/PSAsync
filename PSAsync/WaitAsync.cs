@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Management.Automation;
 using System.Threading;
@@ -155,6 +156,11 @@ namespace PSAsync
                 var action = new Action<object>((o) =>
                 {
                     var Job = (AsyncJob)o;
+                    while (Job.JobStateInfo.State == JobState.NotStarted)
+                    {
+                        //DoNothing
+                        Thread.Sleep(100);
+                    }
                     if (Job.Finished.WaitOne(this.Timeout))
                     {
                         lock (queueLock)
@@ -194,6 +200,8 @@ namespace PSAsync
             else if (this.ShowProgress.IsPresent)
             {
                 var progress = new ProgressRecord(1, "Wating for Async Threads", string.Format("{0} out of {1} complete", readCount, threadCount));
+                var watch = new Stopwatch();
+                watch.Start();
                 while (readCount < threadCount)
                 {
                     while (Queue.Count > 0)
@@ -210,7 +218,7 @@ namespace PSAsync
                         progress.StatusDescription = string.Format("{0} out of {1} complete", readCount, threadCount);
                     }
                     var running = PSRunspace.Instance.JobQueue.Where(j => j.Value.JobStateInfo.State == JobState.Running);
-                    progress.CurrentOperation = string.Format("{0}/{1} threads currently running", running.Count(), PSRunspace.Instance.Settings.PoolSize);
+                    progress.CurrentOperation = string.Format("{0}/{1} threads currently running, {2} elapsed", running.Count(), PSRunspace.Instance.Settings.PoolSize, watch.Elapsed);
                     try
                     { WriteProgress(progress); }
                     catch (PipelineStoppedException ex)
