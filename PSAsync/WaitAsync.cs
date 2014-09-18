@@ -199,6 +199,7 @@ namespace PSAsync
             }
             else if (this.ShowProgress.IsPresent)
             {
+                string message = string.Empty;
                 var progress = new ProgressRecord(1, "Wating for Async Threads", string.Format("{0} out of {1} complete", readCount, threadCount));
                 var watch = new Stopwatch();
                 watch.Start();
@@ -218,13 +219,20 @@ namespace PSAsync
                         progress.StatusDescription = string.Format("{0} out of {1} complete", readCount, threadCount);
                     }
                     var running = PSRunspace.Instance.JobQueue.Where(j => j.Value.JobStateInfo.State == JobState.Running);
-                    progress.CurrentOperation = string.Format("{0}/{1} threads currently running, {2} elapsed", running.Count(), PSRunspace.Instance.Settings.PoolSize, watch.Elapsed);
+                    string newMessage = string.Format("{0}/{1} threads currently running, {2:hh\\:mm\\:ss} elapsed", running.Count(), PSRunspace.Instance.Settings.PoolSize, watch.Elapsed);
                     try
-                    { WriteProgress(progress); }
+                    {
+                        if (progress.CurrentOperation != newMessage)
+                        {
+                            progress.CurrentOperation = newMessage;
+                            WriteProgress(progress);
+                        }
+                    }
                     catch (PipelineStoppedException ex)
                     { }
                     Thread.Sleep(100);
                 }
+                watch.Stop();
             }
             else
             {
