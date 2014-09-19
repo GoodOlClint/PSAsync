@@ -104,7 +104,8 @@ namespace PSAsync
         {
             if (!this.IsOpen)
             {
-                this.pool = new RunspaceSettings().ToPool();
+                if (this.pool == null)
+                { this.LoadSettings(new RunspaceSettings()); }
                 this.WorkLimit = new Semaphore(this.Settings.PoolSize, this.Settings.PoolSize);
                 Thread t = new Thread(this.StartJobs);
                 t.Start();
