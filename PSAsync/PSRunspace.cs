@@ -100,6 +100,7 @@ namespace PSAsync
             if (!this.IsOpen)
             {
                 this.pool = RunspaceFactory.CreateRunspacePool(1, this.Settings.PoolSize);
+                this.pool.ApartmentState = ApartmentState.STA;
                 this.WorkLimit = new Semaphore(this.Settings.PoolSize, this.Settings.PoolSize);
                 Thread t = new Thread(this.StartJobs);
                 t.Start();
