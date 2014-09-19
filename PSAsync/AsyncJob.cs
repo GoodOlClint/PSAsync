@@ -63,16 +63,9 @@ namespace PSAsync
             this.AsyncResults = this.Pipeline.BeginInvoke();
         }
 
-        public PSDataCollection<PSObject> GetJob(bool Keep)
+        public void ReadJob(bool Keep)
         {
-            PSDataCollection<PSObject> data = new PSDataCollection<PSObject>();
-            if (HasMoreData)
-            {
-                data = this.Output;
-                if (!Keep)
-                { this.hasMoreData = false; }
-            }
-            return data;
+            this.hasMoreData = Keep;
         }
         #endregion
 

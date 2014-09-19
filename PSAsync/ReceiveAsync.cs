@@ -19,6 +19,9 @@ namespace PSAsync
         [Parameter(ParameterSetName = "Job", ValueFromPipeline = true)]
         public AsyncJob[] Job { get; set; }
 
+        [Parameter()]
+        public SwitchParameter Keep { get; set; }
+
         public List<AsyncJob> JobQueue;
         protected override void BeginProcessing()
         {
@@ -48,10 +51,13 @@ namespace PSAsync
 
             foreach (AsyncJob j in jobs)
             {
-                WriteObject(j.Output, true);
-                foreach (var error in j.Error)
-                { WriteError(error); }
-
+                if (j.HasMoreData)
+                {
+                    j.ReadJob(this.Keep.IsPresent);
+                    WriteObject(j.Output, true);
+                    foreach (var error in j.Error)
+                    { WriteError(error); }
+                }
             }
         }
 
