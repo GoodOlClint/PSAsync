@@ -161,7 +161,7 @@ namespace PSAsync
                         //DoNothing
                         Thread.Sleep(100);
                     }
-                    if (Job.Finished.WaitOne(this.Timeout))
+                    if (Job.Finished.WaitOne(this.Timeout * 1000))
                     {
                         lock (queueLock)
                         { this.Queue.Enqueue(Job); }
