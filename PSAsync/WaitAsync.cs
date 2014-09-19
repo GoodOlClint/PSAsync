@@ -76,7 +76,10 @@ namespace PSAsync
         {
             base.BeginProcessing();
             this.JobQueue = PSRunspace.Instance.JobQueue.Select(j => j.Value).ToList();
+            if (this.Timeout != -1)
+            { this.jobTimeout = this.Timeout * 1000; }
         }
+        private int jobTimeout = -1;
 
         protected override void ProcessRecord()
         {
@@ -152,8 +155,7 @@ namespace PSAsync
                     { }
                     continue;
                 }
-                if (this.Timeout != -1)
-                { this.Timeout = this.Timeout * 1000; }
+
                 var action = new Action<object>((o) =>
                 {
                     var Job = (AsyncJob)o;
@@ -162,7 +164,7 @@ namespace PSAsync
                         //DoNothing
                         Thread.Sleep(100);
                     }
-                    if (Job.Finished.WaitOne(this.Timeout))
+                    if (Job.Finished.WaitOne(this.jobTimeout))
                     {
                         lock (queueLock)
                         { this.Queue.Enqueue(Job); }
