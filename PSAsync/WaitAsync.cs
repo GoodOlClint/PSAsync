@@ -219,7 +219,7 @@ namespace PSAsync
                         catch (PipelineStoppedException ex)
                         { }
                         readCount++;
-                        progress.PercentComplete = (int)(readCount / threadCount * 100);
+                        progress.PercentComplete = (int)((readCount + skipCount) / threadCount * 100);
                         progress.StatusDescription = string.Format("{0} out of {1} complete, {2} timed out", readCount, threadCount, skipCount);
                     }
                     var running = PSRunspace.Instance.JobQueue.Where(j => j.Value.JobStateInfo.State == JobState.Running);
