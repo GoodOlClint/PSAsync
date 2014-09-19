@@ -166,6 +166,8 @@ namespace PSAsync
                         lock (queueLock)
                         { this.Queue.Enqueue(Job); }
                     }
+                    else
+                    { this.skipCount++; }
                 });
                 Task.Factory.StartNew(action, job, this.cts.Token);
                 threadCount++;
@@ -176,10 +178,12 @@ namespace PSAsync
         private Queue<AsyncJob> Queue { get; set; }
         private object queueLock { get; set; }
         private double threadCount;
+        private double skipCount { get; set; }
 
         protected override void EndProcessing()
         {
             double readCount = 0;
+            this.skipCount = 0;
             if (this.Any.IsPresent)
             {
                 while (readCount == 0)
@@ -203,7 +207,7 @@ namespace PSAsync
                 var progress = new ProgressRecord(1, "Wating for Async Threads", string.Format("{0} out of {1} complete", readCount, threadCount));
                 var watch = new Stopwatch();
                 watch.Start();
-                while (readCount < threadCount)
+                while (readCount + skipCount < threadCount)
                 {
                     while (Queue.Count > 0)
                     {
