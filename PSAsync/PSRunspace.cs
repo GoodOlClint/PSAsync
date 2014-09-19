@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Management.Automation;
+using System.Management.Automation.Host;
 using System.Management.Automation.Runspaces;
 using System.Threading;
 
@@ -52,10 +53,10 @@ namespace PSAsync
         #endregion
 
         #region Public Methods
-        public void LoadSettings(RunspaceSettings settings)
+        public void LoadSettings(RunspaceSettings settings, PSHost host)
         {
             if (!this.IsOpen)
-            { this.pool = settings.ToPool(); }
+            { this.pool = settings.ToPool(host); }
         }
 
         public PowerShell NewPipeline()
@@ -105,7 +106,7 @@ namespace PSAsync
             if (!this.IsOpen)
             {
                 if (this.pool == null)
-                { this.LoadSettings(new RunspaceSettings()); }
+                { this.pool = RunspaceFactory.CreateRunspacePool(1, this.Settings.PoolSize); }
                 this.WorkLimit = new Semaphore(this.Settings.PoolSize, this.Settings.PoolSize);
                 Thread t = new Thread(this.StartJobs);
                 t.Start();

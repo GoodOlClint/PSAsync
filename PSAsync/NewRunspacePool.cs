@@ -48,8 +48,8 @@ namespace PSAsync
 
             if (this.Modules != null)
             { settings.InitialSessionState.ImportPSModule(this.Modules); }
-            
-            PSRunspace.Instance.LoadSettings(settings);
+
+            PSRunspace.Instance.LoadSettings(settings, this.Host);
 
             if (this.PassThru.IsPresent)
             { WriteObject(settings); }

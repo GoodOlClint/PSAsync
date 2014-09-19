@@ -152,7 +152,8 @@ namespace PSAsync
                     { }
                     continue;
                 }
-
+                if (this.Timeout != -1)
+                { this.Timeout = this.Timeout * 1000; }
                 var action = new Action<object>((o) =>
                 {
                     var Job = (AsyncJob)o;
@@ -161,7 +162,7 @@ namespace PSAsync
                         //DoNothing
                         Thread.Sleep(100);
                     }
-                    if (Job.Finished.WaitOne(this.Timeout * 1000))
+                    if (Job.Finished.WaitOne(this.Timeout))
                     {
                         lock (queueLock)
                         { this.Queue.Enqueue(Job); }

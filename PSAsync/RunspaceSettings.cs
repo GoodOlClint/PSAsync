@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
+using System.Management.Automation.Host;
 using System.Management.Automation.Runspaces;
 using System.Text;
 using System.Threading;
@@ -16,15 +17,16 @@ namespace PSAsync
             int poolSize;
             ThreadPool.GetMinThreads(out poolSize, out nulInt);
             this.PoolSize = poolSize;
-            this.InitialSessionState = InitialSessionState.Create();
+            this.InitialSessionState = InitialSessionState.CreateDefault();
             this.ApartmentState = System.Threading.ApartmentState.Unknown;
             this.CleanupInterval = new TimeSpan(0, 15, 0);
+            this.ThreadOptions = PSThreadOptions.Default;
         }
 
         public RunspaceSettings(RunspacePool pool)
             : this()
         {
-            if(pool == null)
+            if (pool == null)
             { return; }
             this.ApartmentState = pool.ApartmentState;
             this.CleanupInterval = pool.CleanupInterval;
@@ -37,14 +39,13 @@ namespace PSAsync
             this.ThreadOptions = pool.ThreadOptions;
         }
 
-        internal RunspacePool ToPool()
+        internal RunspacePool ToPool(PSHost Host)
         {
-            RunspacePool pool = RunspaceFactory.CreateRunspacePool(this.InitialSessionState);
+            RunspacePool pool = RunspaceFactory.CreateRunspacePool(1, this.PoolSize, this.InitialSessionState, Host);
+            //RunspacePool pool = RunspaceFactory.CreateRunspacePool(1, this.PoolSize);
             pool.ApartmentState = this.ApartmentState;
             pool.CleanupInterval = this.CleanupInterval;
             pool.ThreadOptions = this.ThreadOptions;
-            pool.SetMinRunspaces(1);
-            pool.SetMaxRunspaces(this.PoolSize);
             return pool;
         }
         public int PoolSize { get; set; }
