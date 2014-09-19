@@ -30,7 +30,7 @@ namespace PSAsync
         #endregion
 
         #region Public Properties
-        public RunspaceSettings Settings { get; set; }
+        public RunspaceSettings Settings { get { return new RunspaceSettings(this.pool); } }
         public bool IsOpen { get; private set; }
         #endregion
 
@@ -48,11 +48,16 @@ namespace PSAsync
         {
             this.IsOpen = false;
             this.JobQueue = new ConcurrentDictionary<Guid, AsyncJob>();
-            this.Settings = new RunspaceSettings();
         }
         #endregion
 
         #region Public Methods
+        public void LoadSettings(RunspaceSettings settings)
+        {
+            if (!this.IsOpen)
+            { this.pool = settings.ToPool(); }
+        }
+
         public PowerShell NewPipeline()
         {
             this.Open();
@@ -99,8 +104,7 @@ namespace PSAsync
         {
             if (!this.IsOpen)
             {
-                this.pool = RunspaceFactory.CreateRunspacePool(1, this.Settings.PoolSize);
-                this.pool.ApartmentState = ApartmentState.STA;
+                this.pool = new RunspaceSettings().ToPool();
                 this.WorkLimit = new Semaphore(this.Settings.PoolSize, this.Settings.PoolSize);
                 Thread t = new Thread(this.StartJobs);
                 t.Start();

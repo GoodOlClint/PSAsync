@@ -25,28 +25,34 @@ namespace PSAsync
 
         [Parameter()]
         public PSThreadOptions ThreadOptions { get; set; }
-        
+
+        [Parameter()]
+        public string[] Modules { get; set; }
+
 
         protected override void ProcessRecord()
         {
-            PSRunspace.Instance.Settings = new RunspaceSettings();
+            RunspaceSettings settings = new RunspaceSettings();
 
             if (this.PoolSize != 0)
-            { PSRunspace.Instance.Settings.PoolSize = this.PoolSize; }
-            
-            PSRunspace.Instance.Initalize();
+            { settings.PoolSize = this.PoolSize; }
 
             if (this.ApartmentState != System.Threading.ApartmentState.Unknown)
-            { PSRunspace.Instance.Settings.ApartmentState = this.ApartmentState; }
+            { settings.ApartmentState = this.ApartmentState; }
 
             if (this.CleanupInterval != null)
-            { PSRunspace.Instance.Settings.CleanupInterval = (TimeSpan)this.CleanupInterval; }
+            { settings.CleanupInterval = (TimeSpan)this.CleanupInterval; }
 
             if (this.ThreadOptions != PSThreadOptions.Default)
-            { PSRunspace.Instance.Settings.ThreadOptions = this.ThreadOptions; }
+            { settings.ThreadOptions = this.ThreadOptions; }
+
+            if (this.Modules != null)
+            { settings.InitialSessionState.ImportPSModule(this.Modules); }
+            
+            PSRunspace.Instance.LoadSettings(settings);
 
             if (this.PassThru.IsPresent)
-            { WriteObject(PSRunspace.Instance.Settings); }
+            { WriteObject(settings); }
         }
     }
 }

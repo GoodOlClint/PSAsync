@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace PSAsync
 {
-    public sealed class RunspaceSettings
+    public class RunspaceSettings
     {
         public RunspaceSettings()
         {
@@ -16,109 +16,84 @@ namespace PSAsync
             int poolSize;
             ThreadPool.GetMinThreads(out poolSize, out nulInt);
             this.PoolSize = poolSize;
+            this.InitialSessionState = InitialSessionState.Create();
+            this.ApartmentState = System.Threading.ApartmentState.Unknown;
+            this.CleanupInterval = new TimeSpan(0, 15, 0);
         }
 
+        public RunspaceSettings(RunspacePool pool)
+            : this()
+        {
+            if(pool == null)
+            { return; }
+            this.ApartmentState = pool.ApartmentState;
+            this.CleanupInterval = pool.CleanupInterval;
+            this.InitialSessionState = pool.InitialSessionState;
+            this.InstanceId = pool.InstanceId;
+            this.IsDisposed = pool.IsDisposed;
+            this.PoolSize = pool.GetMaxRunspaces();
+            this.RunspacePoolAvailability = pool.RunspacePoolAvailability;
+            this.RunspacePoolStateInfo = pool.RunspacePoolStateInfo;
+            this.ThreadOptions = pool.ThreadOptions;
+        }
+
+        internal RunspacePool ToPool()
+        {
+            RunspacePool pool = RunspaceFactory.CreateRunspacePool(this.InitialSessionState);
+            pool.ApartmentState = this.ApartmentState;
+            pool.CleanupInterval = this.CleanupInterval;
+            pool.ThreadOptions = this.ThreadOptions;
+            pool.SetMinRunspaces(1);
+            pool.SetMaxRunspaces(this.PoolSize);
+            return pool;
+        }
         public int PoolSize { get; set; }
         public ApartmentState ApartmentState
         {
-            get
-            {
-                if (PSRunspace.Instance.pool != null)
-                { return PSRunspace.Instance.pool.ApartmentState; }
-                else
-                { return System.Threading.ApartmentState.Unknown; }
-            }
-            set { PSRunspace.Instance.pool.ApartmentState = value; }
+            get;
+            set;
         }
         public TimeSpan CleanupInterval
         {
-            get
-            {
-                if (PSRunspace.Instance.pool != null)
-                { return PSRunspace.Instance.pool.CleanupInterval; }
-                else
-                { return new TimeSpan(); }
-            }
-            set { PSRunspace.Instance.pool.CleanupInterval = value; }
+            get;
+            set;
         }
 
         public PSThreadOptions ThreadOptions
         {
-            get
-            {
-                if (PSRunspace.Instance.pool != null)
-                { return PSRunspace.Instance.pool.ThreadOptions; }
-                else
-                { return PSThreadOptions.Default; }
-            }
-            set { PSRunspace.Instance.pool.ThreadOptions = value; }
+            get;
+            set;
         }
 
         #region Read Only Properties
         public Guid InstanceId
         {
-            get
-            {
-                if (PSRunspace.Instance.pool != null)
-                { return PSRunspace.Instance.pool.InstanceId; }
-                else
-                { return Guid.Empty; }
-            }
+            get;
+            protected set;
         }
 
         public bool IsDisposed
         {
-            get
-            {
-                if (PSRunspace.Instance.pool != null)
-                { return PSRunspace.Instance.pool.IsDisposed; }
-                else
-                { return true; }
-            }
-        }
-
-        public RunspaceConnectionInfo ConnectionInfo
-        {
-            get
-            {
-                if (PSRunspace.Instance.pool != null)
-                { return PSRunspace.Instance.pool.ConnectionInfo; }
-                else
-                { return null; }
-            }
+            get;
+            protected set;
         }
 
         public InitialSessionState InitialSessionState
         {
-            get
-            {
-                if (PSRunspace.Instance.pool != null)
-                { return PSRunspace.Instance.pool.InitialSessionState; }
-                else
-                { return null; }
-            }
+            get;
+            protected set;
         }
 
         public RunspacePoolAvailability RunspacePoolAvailability
         {
-            get
-            {
-                if (PSRunspace.Instance.pool != null)
-                { return PSRunspace.Instance.pool.RunspacePoolAvailability; }
-                else
-                { return new RunspacePoolAvailability(); }
-            }
+            get;
+            protected set;
         }
 
         public RunspacePoolStateInfo RunspacePoolStateInfo
         {
-            get
-            {
-                if (PSRunspace.Instance.pool != null)
-                { return PSRunspace.Instance.pool.RunspacePoolStateInfo; }
-                else
-                { return new RunspacePoolStateInfo(RunspacePoolState.BeforeOpen, null); }
-            }
+            get;
+            protected set;
         }
         #endregion
 
