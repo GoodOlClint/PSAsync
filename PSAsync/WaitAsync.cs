@@ -220,7 +220,7 @@ namespace PSAsync
                         { }
                         readCount++;
                         progress.PercentComplete = (int)(readCount / threadCount * 100);
-                        progress.StatusDescription = string.Format("{0} out of {1} complete, {2} skipped", readCount, threadCount, skipCount);
+                        progress.StatusDescription = string.Format("{0} out of {1} complete, {2} timed out", readCount, threadCount, skipCount);
                     }
                     var running = PSRunspace.Instance.JobQueue.Where(j => j.Value.JobStateInfo.State == JobState.Running);
                     string newMessage = string.Format("{0}/{1} threads currently running, {2:hh\\:mm\\:ss} elapsed", running.Count(), PSRunspace.Instance.Settings.PoolSize, watch.Elapsed);
