@@ -30,6 +30,10 @@ namespace PSAsync
         [Parameter(ParameterSetName = "ScriptBlock")]
         public Hashtable Parameters { get; set; }
 
+        [Parameter(ParameterSetName = "FilePath")]
+        [Parameter(ParameterSetName = "ScriptBlock")]
+        public string Name { get; set; }
+
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
@@ -48,6 +52,7 @@ namespace PSAsync
             { job = new AsyncJob(sc, this.Parameters); }
             else
             { job = new AsyncJob(sc); }
+            job.Name = this.Name;
             PSRunspace.Instance.AddJob(job);
             WriteObject(job);
         }
