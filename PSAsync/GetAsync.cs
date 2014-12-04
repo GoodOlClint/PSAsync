@@ -15,38 +15,42 @@ namespace PSAsync
             Position = 1,
             ValueFromPipelineByPropertyName = true)]
         public int[] Id { get; set; }
-
+        
+        [Parameter(ParameterSetName = "InstanceIdParameterSet",
+            Position = 1,
+            Mandatory = true,
+            ValueFromPipelineByPropertyName = true)]
+        public Guid[] InstanceID { get; set; }
+        
         [Parameter(ParameterSetName = "CommandParameterSet",
             Mandatory = true,
             ValueFromPipelineByPropertyName = true)]
         public string[] Command { get; set; }
 
-        [Parameter(ParameterSetName = "FilterParameterSet",
-            Mandatory = true,
-            ValueFromPipelineByPropertyName = true)]
-        public Hashtable Filter { get; set; }
-
-        [Parameter(ParameterSetName = "InstanceIdParameterSet",
-            Mandatory = true,
-            ValueFromPipelineByPropertyName = true)]
-        public Guid[] InstanceID { get; set; }
-
         [Parameter(ParameterSetName = "NameParameterSet",
+            Position = 1,
             Mandatory = true,
             ValueFromPipelineByPropertyName = true)]
         public string[] Name { get; set; }
 
         [Parameter(ParameterSetName = "StateParameterSet",
+            Position = 1,
             Mandatory = true,
             ValueFromPipelineByPropertyName = true)]
         public JobState State { get; set; }
 
+        [Parameter(ParameterSetName = "FilterParameterSet",
+            Position = 1,
+            Mandatory = true,
+            ValueFromPipelineByPropertyName = true)]
+        public Hashtable Filter { get; set; }
+        
         [Parameter(ParameterSetName = "CommandParameterSet")]
         [Parameter(ParameterSetName = "InstanceIdParameterSet")]
         [Parameter(ParameterSetName = "SessionIdParameterSet")]
         [Parameter(ParameterSetName = "NameParameterSet")]
         [Parameter(ParameterSetName = "StateParameterSet")]
-        public DateTime? After { get; set; }
+        public SwitchParameter HasMoreData { get; set; }
 
         [Parameter(ParameterSetName = "CommandParameterSet")]
         [Parameter(ParameterSetName = "InstanceIdParameterSet")]
@@ -60,7 +64,7 @@ namespace PSAsync
         [Parameter(ParameterSetName = "SessionIdParameterSet")]
         [Parameter(ParameterSetName = "NameParameterSet")]
         [Parameter(ParameterSetName = "StateParameterSet")]
-        public SwitchParameter HasMoreData { get; set; }
+        public DateTime? After { get; set; }
 
         [Parameter(ParameterSetName = "CommandParameterSet")]
         [Parameter(ParameterSetName = "InstanceIdParameterSet")]
