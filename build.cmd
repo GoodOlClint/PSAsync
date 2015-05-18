@@ -1,6 +1,15 @@
 @echo off
 setlocal
-call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\Tools\VsDevCmd.bat"
-msbuild .\PSAsync.sln
+if "%VS120COMNTOOLS%"=="" GOTO NOTOOLS
+call "%VS120COMNTOOLS%\VsDevCmd.bat"
+msbuild %~dp0PSAsync.sln  /p:Configuration=Debug /l:FileLogger,Microsoft.Build.Engine;logfile=PSScriptAnalyzer_Build.log;append=true
 if NOT [%ERRORLEVEL%]==[0] pause
+
+GOTO END
+
+:NOTOOLS
+echo The Visual Studio 2013 tools are not installed
+pause
+
+:END
 endlocal
